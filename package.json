@@ -1,0 +1,38 @@
+{
+  "name": "wav-agency-website",
+  "version": "1.0.0",
+  "description": "WAV Marketing Agency — interactive website (Express + TypeScript)",
+  "main": "dist/server/index.js",
+  "scripts": {
+    "dev": "concurrently -k -n server,client -c magenta,cyan \"tsx watch --clear-screen=false src/server/index.ts\" \"npm:watch:client\"",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "esbuild src/client/main.ts --bundle --minify --sourcemap --target=es2020 --outfile=public/js/main.js",
+    "watch:client": "esbuild src/client/main.ts --bundle --sourcemap --target=es2020 --outfile=public/js/main.js --watch=forever",
+    "build:server": "tsc -p tsconfig.json",
+    "start": "node dist/server/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "compression": "^1.8.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.5",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.1",
+    "concurrently": "^9.1.2",
+    "esbuild": "^0.25.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "private": true
+}

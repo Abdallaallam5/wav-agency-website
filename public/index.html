@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WAV — Full-Stack Growth Agency | Don't follow the wave. Be the wave.</title>
+  <meta name="description" content="WAV is a full-stack growth agency in Egypt. Strategy, content, media, technology and analytics connected into one system that turns effort into movement." />
+  <meta name="theme-color" content="#07060b" />
+  <meta property="og:title" content="WAV — Don't follow the wave. Be the wave." />
+  <meta property="og:description" content="Full-stack growth agency: marketing, creative, media, strategy, development, systems, automation and analytics." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/assets/work/be-the-wave.webp" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Alexandria:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Organization","name":"WAV Marketing Agency","url":"https://www.wavagency.com","slogan":"Don't follow the wave. Be the wave.","areaServed":"Egypt","description":"Full-stack growth agency: marketing, creative, media, strategy, development, systems, automation and analytics."}
+  </script>
+  <script src="/js/main.js" defer></script>
+</head>
+<body class="is-loading">
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+  <!-- Intro loader: the W draws itself, then a wave washes it away -->
+  <div class="loader" aria-hidden="true">
+    <svg class="loader__mark" viewBox="0 0 124 80"><use href="#w-path-def" /></svg>
+    <p class="loader__text">CREATIVITY IN MOTION</p>
+    <svg class="loader__wave" viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0 60 C 240 0 480 120 720 60 S 1200 0 1440 60 V120 H0 Z" /></svg>
+  </div>
+
+  <!-- Reusable SVG defs -->
+  <svg width="0" height="0" class="sr-defs" aria-hidden="true">
+    <defs>
+      <linearGradient id="wav-grad" x1="0" y1="0" x2="1" y2="0.3">
+        <stop offset="0" stop-color="#5b2bff" />
+        <stop offset=".5" stop-color="#9b4dff" />
+        <stop offset="1" stop-color="#e07bff" />
+      </linearGradient>
+      <symbol id="w-path-def" viewBox="0 0 124 80">
+        <path class="w-stroke" d="M10 14 C 20 14 25 66 39 66 C 51 66 53 34 62 34 C 71 34 73 66 85 66 C 100 66 106 24 116 10" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="cursor" aria-hidden="true"><span class="cursor__dot"></span><span class="cursor__ring"></span></div>
+
+  <header class="nav" data-nav>
+    <a class="nav__brand" href="#top" aria-label="WAV home">
+      <svg viewBox="0 0 124 80" class="nav__mark"><use href="#w-path-def" /></svg>
+      <span class="nav__word">W<i>Λ</i>V</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#story" data-i18n="nav.story">Story</a>
+      <a href="#services" data-i18n="nav.services">Services</a>
+      <a href="#pulse" data-i18n="nav.pulse">Pulse check</a>
+      <a href="#work" data-i18n="nav.work">Work</a>
+      <a href="#contact" data-i18n="nav.contact">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="lang-toggle" type="button" data-lang-toggle aria-label="Switch language">
+        <span data-lang="en">EN</span><span data-lang="ar">ع</span>
+      </button>
+      <a class="btn btn--small magnetic" href="#contact"><span data-i18n="nav.cta">Let's make waves</span></a>
+      <button class="nav__burger" type="button" aria-label="Menu" aria-expanded="false" data-burger><span></span><span></span></button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ───────────────────── HERO ───────────────────── -->
+    <section class="hero" id="top">
+      <canvas class="hero__canvas" data-hero-waves aria-hidden="true"></canvas>
+      <div class="hero__glow" aria-hidden="true"></div>
+
+      <div class="ticker ticker--top" aria-hidden="true">
+        <div class="ticker__track">
+          <span>CREATIVITY IN MOTION</span><b>✦</b><span>FULL-STACK GROWTH AGENCY</span><b>✦</b><span>EGYPT 2026</span><b>✦</b>
+          <span>CREATIVITY IN MOTION</span><b>✦</b><span>FULL-STACK GROWTH AGENCY</span><b>✦</b><span>EGYPT 2026</span><b>✦</b>
+        </div>
+      </div>
+
+      <div class="hero__inner container">
+        <p class="eyebrow reveal" data-i18n="hero.eyebrow">Marketing agency · Growth partner</p>
+        <h1 class="hero__title">
+          <span class="hero__line" data-wave-text data-i18n="hero.l1">Don't follow</span>
+          <span class="hero__line hero__line--muted" data-wave-text data-i18n="hero.l2">the wave.</span>
+          <span class="hero__line hero__line--accent" data-wave-text data-i18n="hero.l3">Be the wave.</span>
+        </h1>
+        <div class="hero__bottom">
+          <p class="hero__lead reveal" data-i18n="hero.lead">In a world full of ordinary, we create what <strong>moves brands</strong>. Strategy, content, media, technology and analytics — connected into one system built for movement.</p>
+          <div class="hero__ctas reveal">
+            <a class="btn magnetic" href="#pulse"><span data-i18n="hero.cta1">Check your brand's pulse</span><svg viewBox="0 0 24 24" class="btn__icon"><path d="M2 12h4l3-7 4 14 3-7h6" /></svg></a>
+            <a class="btn btn--ghost magnetic" href="#work"><span data-i18n="hero.cta2">See our work</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero__meta container" aria-hidden="true">
+        <span>MARKETING + CREATIVE + MEDIA + STRATEGY</span>
+        <span class="hero__hint" data-i18n="hero.hint">Move your cursor · click to make waves</span>
+        <span>DEVELOPMENT + SYSTEMS + AUTOMATION + ANALYTICS</span>
+      </div>
+      <a class="scroll-cue" href="#story" aria-label="Scroll down">
+        <svg viewBox="0 0 40 60"><path d="M20 4 C 30 14 10 22 20 32 S 30 46 20 56" /></svg>
+      </a>
+    </section>
+
+    <!-- Text riding a moving wave -->
+    <div class="wave-marquee" data-wave-marquee aria-hidden="true">
+      <svg viewBox="0 0 1600 220" preserveAspectRatio="none">
+        <path id="marquee-path" d="" fill="none" />
+        <text><textPath href="#marquee-path" data-marquee-text>STRATEGY ✦ CONTENT ✦ MEDIA ✦ SYSTEMS ✦ MOVEMENT ✦ STRATEGY ✦ CONTENT ✦ MEDIA ✦ SYSTEMS ✦ MOVEMENT ✦ STRATEGY ✦ CONTENT ✦ MEDIA ✦ SYSTEMS ✦ MOVEMENT ✦</textPath></text>
+      </svg>
+    </div>
+
+    <!-- ───────────────────── STORY: flatline → wave ───────────────────── -->
+    <section class="story" id="story" data-story>
+      <div class="story__sticky">
+        <div class="container story__head">
+          <span class="section-tag"><i>01</i> <span data-i18n="story.tag">The story</span></span>
+          <span class="story__readout"><span data-i18n="story.signal">Brand signal</span> <b data-story-readout>00%</b></span>
+        </div>
+        <svg class="story__wave" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
+          <path class="story__wave-glow" data-story-path-glow d="" />
+          <path class="story__wave-line" data-story-path d="" />
+        </svg>
+        <div class="container story__texts">
+          <p class="story__step" data-step="0" data-i18n="story.s1">Some brands are active, but not truly moving.</p>
+          <p class="story__step" data-step="1" data-i18n="story.s2">They create content. Run ads. Invest in marketing. Yet nothing really shifts.</p>
+          <p class="story__step" data-step="2" data-i18n="story.s3">Because activity isn't progress, reach isn't always growth, and content alone isn't strategy.</p>
+          <h2 class="story__step story__step--big" data-step="3" data-i18n-html="story.s4">We're here to create <em>a wave.</em></h2>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────── APPROACH ───────────────────── -->
+    <section class="approach section" id="approach">
+      <div class="container">
+        <div class="split-head">
+          <div>
+            <span class="section-tag reveal"><i>02</i> <span data-i18n="approach.tag">How we move</span></span>
+            <h2 class="display reveal" data-i18n-html="approach.title">Every wave starts <br />with a <em>shift.</em></h2>
+          </div>
+          <p class="lead reveal" data-i18n="approach.lead">We don't start with posts. We start with perspective. Most agencies ask "what should we post?" — a partner asks first: where does the business stand, and what needs to move?</p>
+        </div>
+
+        <div class="approach__track" data-approach>
+          <svg class="approach__svg" viewBox="0 0 1200 260" preserveAspectRatio="none" aria-hidden="true">
+            <path class="approach__base" d="M0 130 C 150 30 250 30 300 130 S 450 230 600 130 S 750 30 900 130 S 1050 230 1200 130" />
+            <path class="approach__draw" data-approach-path d="M0 130 C 150 30 250 30 300 130 S 450 230 600 130 S 750 30 900 130 S 1050 230 1200 130" />
+          </svg>
+          <ol class="approach__steps">
+            <li class="approach__step reveal"><span class="approach__num">01</span><h3 data-i18n="approach.s1t">Understand</h3><p data-i18n="approach.s1">Where the business really stands — market, audience, numbers.</p></li>
+            <li class="approach__step reveal"><span class="approach__num">02</span><h3 data-i18n="approach.s2t">Define the problem</h3><p data-i18n="approach.s2">Find what's holding it back. The real one, not the loudest one.</p></li>
+            <li class="approach__step reveal"><span class="approach__num">03</span><h3 data-i18n="approach.s3t">Build the solution</h3><p data-i18n="approach.s3">A smarter decision, a clearer direction, a stronger message — or a system that connects it all.</p></li>
+            <li class="approach__step reveal"><span class="approach__num">04</span><h3 data-i18n="approach.s4t">Create movement</h3><p data-i18n="approach.s4">The right tools, used together, until the needle actually moves.</p></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────── VISION / MISSION / WHO ───────────────────── -->
+    <section class="pillars section">
+      <div class="container pillars__grid">
+        <article class="pillar reveal" data-tilt>
+          <div class="pillar__img"><img src="/assets/scenes/vision.webp" alt="" loading="lazy" width="997" height="1029" /></div>
+          <div class="pillar__body">
+            <span class="pillar__tag" data-i18n="pillars.v.tag">Vision · رؤيتنا</span>
+            <h3 data-i18n="pillars.v.title">We don't just see what's next. We help shape it.</h3>
+            <p data-i18n="pillars.v.text">To change the way brands think about growth, turning ideas and opportunities into systems that create real, sustainable movement.</p>
+          </div>
+        </article>
+        <article class="pillar reveal" data-tilt>
+          <div class="pillar__img"><img src="/assets/scenes/knot.webp" alt="" loading="lazy" width="1067" height="960" /></div>
+          <div class="pillar__body">
+            <span class="pillar__tag" data-i18n="pillars.m.tag">Mission · رسالتنا</span>
+            <h3 data-i18n="pillars.m.title">Find what's holding you back. Build what moves you forward.</h3>
+            <p data-i18n="pillars.m.text">Understand where the business stands, uncover what's slowing it down, and build the solution that pushes it forward. Less guesswork. More direction.</p>
+          </div>
+        </article>
+        <article class="pillar reveal" data-tilt>
+          <div class="pillar__img"><img src="/assets/scenes/partner.webp" alt="" loading="lazy" width="1264" height="851" /></div>
+          <div class="pillar__body">
+            <span class="pillar__tag" data-i18n="pillars.w.tag">Who we are · من نحن</span>
+            <h3 data-i18n="pillars.w.title">More than an agency. Your growth partner.</h3>
+            <p data-i18n="pillars.w.text">We don't treat strategy, creativity, technology and performance as separate pieces. We connect them into one system. One vision. One direction. One wave.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ───────────────────── PULSE CHECK (interactive) ───────────────────── -->
+    <section class="pulse section" id="pulse" data-pulse>
+      <div class="pulse__bg" aria-hidden="true"><img src="/assets/scenes/knot.webp" alt="" loading="lazy" /></div>
+      <div class="container pulse__head">
+        <span class="section-tag reveal"><i>03</i> <span data-i18n="pulse.tag">Brand pulse check</span></span>
+        <h2 class="display display--center reveal" data-i18n-html="pulse.title">What's holding <br /><em>your brand</em> back?</h2>
+        <p class="lead lead--center reveal" data-i18n="pulse.lead">Six honest questions. Pick the answer that sounds most like you, and see exactly how WAV would fix it. Takes about a minute.</p>
+      </div>
+
+      <div class="pulse__stage container">
+        <div class="pulse__monitor" aria-hidden="true">
+          <div class="pulse__monitor-head">
+            <span data-i18n="pulse.signal">Your brand signal</span>
+            <b data-pulse-level>—</b>
+          </div>
+          <canvas data-pulse-canvas></canvas>
+          <div class="pulse__dots" data-pulse-dots></div>
+        </div>
+
+        <div class="pulse__card" data-pulse-card aria-live="polite">
+          <div class="pulse__intro" data-pulse-view="intro">
+            <svg class="pulse__intro-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M4 32h12l6-16 10 32 8-24 5 8h15" /></svg>
+            <h3 data-i18n="pulse.introTitle">Is your brand moving, or just active?</h3>
+            <p data-i18n="pulse.introText">No email needed. No sales pitch until you ask for one.</p>
+            <button class="btn magnetic" type="button" data-pulse-start><span data-i18n="pulse.start">Start the pulse check</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────── SERVICES ───────────────────── -->
+    <section class="services section" id="services">
+      <div class="container">
+        <div class="split-head">
+          <div>
+            <span class="section-tag reveal"><i>04</i> <span data-i18n="services.tag">Services</span></span>
+            <h2 class="display reveal" data-i18n-html="services.title">What powers <br /><em>the wave.</em></h2>
+          </div>
+          <p class="lead reveal" data-i18n="services.lead">Seven connected capabilities. One system built to move brands forward. Not separate services. One orchestrated impact.</p>
+        </div>
+
+        <div class="services__grid">
+          <article class="service reveal" data-ripple>
+            <span class="service__num">01</span>
+            <h3 data-i18n="services.s1">Strategy &amp; Brand</h3>
+            <p data-i18n="services.s1d">Brand strategy · Brand identity · Positioning · Messaging &amp; storytelling</p>
+            <div class="service__wave" aria-hidden="true"><svg viewBox="0 0 800 100" preserveAspectRatio="none"><path d="M0 50 Q 100 0 200 50 T 400 50 T 600 50 T 800 50 V100 H0Z" /></svg></div>
+          </article>
+          <article class="service reveal" data-ripple>
+            <span class="service__num">02</span>
+            <h3 data-i18n="services.s2">Content &amp; Creative</h3>
+            <p data-i18n="services.s2d">Content strategy · Social media management · Creative direction · Copywriting · Production</p>
+            <div class="service__wave" aria-hidden="true"><svg viewBox="0 0 800 100" preserveAspectRatio="none"><path d="M0 50 Q 100 0 200 50 T 400 50 T 600 50 T 800 50 V100 H0Z" /></svg></div>
+          </article>
+          <article class="service reveal" data-ripple>
+            <span class="service__num">03</span>
+            <h3 data-i18n="services.s3">Media &amp; Performance</h3>
+            <p data-i18n="services.s3d">Meta · Google · TikTok · Snapchat ads · Media planning · Funnel optimization · Retargeting</p>
+            <div class="service__wave" aria-hidden="true"><svg viewBox="0 0 800 100" preserveAspectRatio="none"><path d="M0 50 Q 100 0 200 50 T 400 50 T 600 50 T 800 50 V100 H0Z" /></svg></div>
+          </article>
+          <article class="service service--new reveal" data-ripple>
+            <span class="service__badge">NEW!</span>
+            <span class="service__num">04</span>
+            <h3 data-i18n="services.s4">Technology &amp; Development</h3>
+            <p data-i18n="services.s4d">Websites · Web apps · Mobile apps · E-commerce · Custom systems · CRM · API integrations · Automation</p>
+            <div class="service__wave" aria-hidden="true"><svg viewBox="0 0 800 100" preserveAspectRatio="none"><path d="M0 50 Q 100 0 200 50 T 400 50 T 600 50 T 800 50 V100 H0Z" /></svg></div>
+          </article>
+          <article class="service reveal" data-ripple>
+            <span class="service__num">05</span>
+            <h3 data-i18n="services.s5">Digital Experience</h3>
+            <p data-i18n="services.s5d">UI/UX · Landing pages · Graphic design · Motion · Video editing</p>
+            <div class="service__wave" aria-hidden="true"><svg viewBox="0 0 800 100" preserveAspectRatio="none"><path d="M0 50 Q 100 0 200 50 T 400 50 T 600 50 T 800 50 V100 H0Z" /></svg></div>
+          </article>
+          <article class="service reveal" data-ripple>
+            <span class="service__num">06</span>
+            <h3 data-i18n="services.s6">Growth &amp; Analytics</h3>
+            <p data-i18n="services.s6d">Growth systems · Data analytics · KPI reporting · Marketing automation · Conversion optimization</p>
+            <div class="service__wave" aria-hidden="true"><svg viewBox="0 0 800 100" preserveAspectRatio="none"><path d="M0 50 Q 100 0 200 50 T 400 50 T 600 50 T 800 50 V100 H0Z" /></svg></div>
+          </article>
+          <article class="service reveal" data-ripple>
+            <span class="service__num">07</span>
+            <h3 data-i18n="services.s7">Print &amp; Production</h3>
+            <p data-i18n="services.s7d">Packaging · Brochures · Menus &amp; catalogs · POS · Booths &amp; exhibitions · Merch · Print quality control</p>
+            <div class="service__wave" aria-hidden="true"><svg viewBox="0 0 800 100" preserveAspectRatio="none"><path d="M0 50 Q 100 0 200 50 T 400 50 T 600 50 T 800 50 V100 H0Z" /></svg></div>
+          </article>
+          <aside class="service service--cta reveal">
+            <img src="/assets/scenes/orchestra.webp" alt="" loading="lazy" />
+            <div>
+              <h3 data-i18n="services.ctaTitle">Different skills. One powerful wave.</h3>
+              <a class="link-arrow" href="#pulse" data-i18n="services.cta">Not sure where to start? Take the pulse check →</a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────── WORK ───────────────────── -->
+    <section class="work section" id="work">
+      <div class="container">
+        <span class="section-tag reveal"><i>05</i> <span data-i18n="work.tag">Selected work</span></span>
+        <h2 class="display reveal" data-i18n-html="work.title">Creative ideas. <em>Real impact.</em></h2>
+
+        <article class="case reveal">
+          <div class="case__media" data-parallax><img src="/assets/work/moamenoon.webp" alt="Moamenoon automotive campaign visuals: World Cup, showroom, Kia campaign, Pyramids and Sinai" loading="lazy" width="981" height="840" /></div>
+          <div class="case__body">
+            <span class="case__meta">MOAMENOON · <span data-i18n="work.c1meta">Automotive creative campaigns</span></span>
+            <h3 data-i18n-html="work.c1title">We don't just show cars. <em>We create desire.</em></h3>
+            <p data-i18n="work.c1text">World Cup, showroom, Kia launches, the Pyramids and Sinai: a campaign series that puts every car in a story worth stopping for.</p>
+            <ul class="case__tags"><li>Creative direction</li><li>Campaign visuals</li><li>Social</li></ul>
+          </div>
+        </article>
+
+        <article class="case case--flip reveal">
+          <div class="case__media" data-parallax><img src="/assets/work/crazy-crisps.webp" alt="Crazy Crisps and Honey campaign visuals with bold characters" loading="lazy" width="1568" height="1141" /></div>
+          <div class="case__body">
+            <span class="case__meta">CRAZY CRISPS · HONEY · <span data-i18n="work.c2meta">FMCG</span></span>
+            <h3 data-i18n-html="work.c2title">We don't just sell products. <em>We give them personality.</em></h3>
+            <p data-i18n="work.c2text">Bold characters. Playful storytelling. Creative campaigns that make snack brands impossible to ignore, from the shelf to the streets of Paris.</p>
+            <ul class="case__tags"><li>Characters</li><li>Storytelling</li><li>Packaging</li></ul>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ───────────────────── INDUSTRIES ───────────────────── -->
+    <section class="industries section">
+      <div class="container industries__grid">
+        <div>
+          <span class="section-tag reveal"><i>06</i> <span data-i18n="ind.tag">Where we create impact</span></span>
+          <h2 class="display reveal" data-i18n-html="ind.title">Different industries. <em>Same drive to make waves.</em></h2>
+          <ul class="industries__list">
+            <li class="reveal"><span>01</span><b data-i18n="ind.i1">Food &amp; Beverage</b></li>
+            <li class="reveal"><span>02</span><b data-i18n="ind.i2">Automotive</b></li>
+            <li class="reveal"><span>03</span><b data-i18n="ind.i3">FMCG &amp; Consumer Brands</b></li>
+            <li class="reveal"><span>04</span><b data-i18n="ind.i4">Organizations &amp; Communities</b></li>
+            <li class="reveal"><span>05</span><b data-i18n="ind.i5">Corporate &amp; Professional Services</b></li>
+            <li class="reveal"><span>06</span><b data-i18n="ind.i6">Education &amp; Awareness</b></li>
+          </ul>
+        </div>
+        <div class="industries__img reveal" data-tilt><img src="/assets/scenes/industries.webp" alt="" loading="lazy" /></div>
+      </div>
+    </section>
+
+    <!-- ───────────────────── CLIENTS ───────────────────── -->
+    <section class="clients section" aria-labelledby="clients-title">
+      <div class="container">
+        <h2 class="clients__title reveal" id="clients-title" data-i18n="clients.title">Brands that trust us to move them</h2>
+      </div>
+      <div class="clients__rows" data-logo-wave>
+        <div class="clients__row">
+          <div class="clients__track">
+            <img src="/assets/logos/crazy-crisps.png" alt="Crazy Crisps" /><img src="/assets/logos/light-pop.png" alt="Light Pop" /><img src="/assets/logos/yummy-bites.png" alt="Yummy Bites" /><img src="/assets/logos/moamenoon-gold.png" alt="Moamenoon" /><img src="/assets/logos/tutti-lolly.png" alt="Tutti Lolly" /><img src="/assets/logos/mojo.png" alt="Mojo" />
+          </div>
+        </div>
+        <div class="clients__row clients__row--reverse">
+          <div class="clients__track">
+            <img src="/assets/logos/honey.png" alt="Honey" /><img src="/assets/logos/eat-yummy.png" alt="EatYummy" /><img src="/assets/logos/egygulf.png" alt="EgyGulf Foods" /><img src="/assets/logos/aiesec.png" alt="AIESEC Egypt" /><img src="/assets/logos/3m-coffee.png" alt="3M Coffee" /><img src="/assets/logos/moamenoon.png" alt="Moamenoon" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────── CONTACT ───────────────────── -->
+    <section class="contact section" id="contact">
+      <div class="contact__bg" aria-hidden="true"><img src="/assets/work/w-3d.webp" alt="" loading="lazy" /></div>
+      <div class="container contact__grid">
+        <div class="contact__intro">
+          <span class="section-tag reveal"><i>07</i> <span data-i18n="contact.tag">Contact us</span></span>
+          <h2 class="display reveal" data-i18n-html="contact.title">Let's make <em>waves.</em></h2>
+          <p class="lead reveal" data-i18n="contact.lead">Tell us where your brand stands. We'll come back with what's holding it back, and what will move it forward.</p>
+          <ul class="contact__info reveal">
+            <li><span data-i18n="contact.web">Website</span><a href="https://www.wavagency.com" rel="noopener">www.wavagency.com</a></li>
+            <li><span data-i18n="contact.based">Based in</span><b data-i18n="contact.egypt">Egypt</b></li>
+          </ul>
+        </div>
+
+        <form class="form reveal" data-contact-form novalidate>
+          <div class="form__plan" data-plan-chip hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h4l3-7 4 14 3-7h6" /></svg>
+            <span data-plan-text></span>
+            <button type="button" data-plan-remove aria-label="Remove plan">×</button>
+          </div>
+          <div class="form__row">
+            <label class="field"><span data-i18n="form.name">Your name</span><input name="name" autocomplete="name" required minlength="2" maxlength="80" /></label>
+            <label class="field"><span data-i18n="form.company">Brand / company</span><input name="company" autocomplete="organization" maxlength="120" /></label>
+          </div>
+          <label class="field"><span data-i18n="form.contact">Email or phone / WhatsApp</span><input name="contact" required maxlength="120" /></label>
+          <label class="field"><span data-i18n="form.service">What do you need most?</span>
+            <select name="service">
+              <option value="" data-i18n="form.serviceAny">Not sure yet — help me decide</option>
+              <option data-i18n="services.s1">Strategy &amp; Brand</option>
+              <option data-i18n="services.s2">Content &amp; Creative</option>
+              <option data-i18n="services.s3">Media &amp; Performance</option>
+              <option data-i18n="services.s4">Technology &amp; Development</option>
+              <option data-i18n="services.s5">Digital Experience</option>
+              <option data-i18n="services.s6">Growth &amp; Analytics</option>
+              <option data-i18n="services.s7">Print &amp; Production</option>
+            </select>
+          </label>
+          <label class="field"><span data-i18n="form.message">Where does your brand feel stuck?</span><textarea name="message" rows="4" maxlength="2000"></textarea></label>
+          <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off" /></label>
+          <input type="hidden" name="planId" />
+          <button class="btn btn--block magnetic" type="submit"><span data-i18n="form.submit">Send — let's make waves</span></button>
+          <p class="form__status" data-form-status role="status"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__liquid" aria-hidden="true">
+      <svg viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <clipPath id="footer-clip"><text x="500" y="225" text-anchor="middle">WAV</text></clipPath>
+        </defs>
+        <text class="footer__outline" x="500" y="225" text-anchor="middle">WAV</text>
+        <g clip-path="url(#footer-clip)">
+          <g class="footer__fill" data-footer-fill>
+            <path class="footer__wave footer__wave--back" d="M0 40 Q 125 0 250 40 T 500 40 T 750 40 T 1000 40 T 1250 40 T 1500 40 T 1750 40 T 2000 40 V400 H0Z" />
+            <path class="footer__wave" d="M0 50 Q 125 15 250 50 T 500 50 T 750 50 T 1000 50 T 1250 50 T 1500 50 T 1750 50 T 2000 50 V400 H0Z" />
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="container footer__bar">
+      <span>© 2026 WAV Marketing Agency</span>
+      <span class="footer__tag" data-i18n="footer.tag">Don't follow the wave. Be the wave.</span>
+      <a href="#top" data-i18n="footer.top">Back to top ↑</a>
+    </div>
+  </footer>
+</body>
+</html>
