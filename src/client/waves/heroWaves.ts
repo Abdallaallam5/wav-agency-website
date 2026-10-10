@@ -26,9 +26,9 @@ interface Ripple {
 }
 
 const RIBBONS: Ribbon[] = [
-  { y: 0.66, amp: 0.12, freq: 1.15, speed: 0.42, phase: 0, lines: 30, spread: 120, from: [91, 43, 255], to: [224, 123, 255], alpha: 0.55 },
-  { y: 0.58, amp: 0.085, freq: 1.9, speed: -0.3, phase: 2.1, lines: 22, spread: 70, from: [139, 61, 255], to: [91, 120, 255], alpha: 0.32 },
-  { y: 0.8, amp: 0.06, freq: 0.8, speed: 0.22, phase: 4.2, lines: 18, spread: 150, from: [176, 107, 255], to: [91, 43, 255], alpha: 0.22 },
+  { y: 0.66, amp: 0.12, freq: 1.15, speed: 0.42, phase: 0, lines: 16, spread: 120, from: [91, 43, 255], to: [224, 123, 255], alpha: 0.55 },
+  { y: 0.58, amp: 0.085, freq: 1.9, speed: -0.3, phase: 2.1, lines: 11, spread: 70, from: [139, 61, 255], to: [91, 120, 255], alpha: 0.32 },
+  { y: 0.8, amp: 0.06, freq: 0.8, speed: 0.22, phase: 4.2, lines: 8, spread: 150, from: [176, 107, 255], to: [91, 43, 255], alpha: 0.22 },
 ];
 
 const TAU = Math.PI * 2;
@@ -44,17 +44,17 @@ export function initHeroWaves(canvas: HTMLCanvasElement) {
   let now = 0;
   const pointer = { x: -9999, y: 0, tx: -9999, ty: 0, influence: 0, lastMove: 0 };
   const ripples: Ripple[] = [];
-  const stars = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.3 + 0.3, s: Math.random() * 0.4 + 0.1 }));
+  const stars = Array.from({ length: 36 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.3 + 0.3, s: Math.random() * 0.4 + 0.1 }));
 
   function resize() {
     const rect = canvas.getBoundingClientRect();
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     w = rect.width;
     h = rect.height;
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-    step = w < 700 ? 14 : 9;
+    step = w < 700 ? 20 : 14;
     for (const r of RIBBONS) {
       const g = ctx!.createLinearGradient(0, 0, w, 0);
       g.addColorStop(0, `rgb(${r.from.join(',')})`);
@@ -124,8 +124,11 @@ export function initHeroWaves(canvas: HTMLCanvasElement) {
     ctx!.globalAlpha = 1;
   }
 
+  let lastDraw = 0;
   function frame(t: number) {
     now = t;
+    if (t - lastDraw < 0.024) return; // cap at ~40fps — smooth enough, half the work
+    lastDraw = t;
     pointer.x = lerp(pointer.x, pointer.tx, 0.08);
     pointer.y = lerp(pointer.y, pointer.ty, 0.08);
     const idle = t - pointer.lastMove > 2.5;

@@ -1,6 +1,5 @@
-import { randomBytes } from 'node:crypto';
-import type { Lang, MomentumLevel, Report, ReportRequest, ServiceKey } from '../../shared/types.js';
-import { QUESTION_COUNT, findAnswer, serviceSummary } from '../data/diagnostic.js';
+import type { Lang, MomentumLevel, Report, ReportRequest, ServiceKey } from './types.js';
+import { QUESTION_COUNT, findAnswer, serviceSummary } from './diagnostic.js';
 
 const LEVELS: { min: number; level: MomentumLevel; label: Record<Lang, string> }[] = [
   { min: 85, level: 'wave', label: { en: 'Wave', ar: 'Wave' } },
@@ -94,7 +93,7 @@ export function buildReport({ lang, answers }: ReportRequest): Report {
     .map(([key]) => serviceSummary(key, lang));
 
   return {
-    planId: `WAV-${randomBytes(3).toString('hex').toUpperCase()}`,
+    planId: `WAV-${Math.floor(Math.random() * 0xffffff).toString(16).toUpperCase().padStart(6, '0')}`,
     score,
     level: tier.level,
     levelLabel: tier.label[lang],

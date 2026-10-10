@@ -1,4 +1,4 @@
-import type { ContactRequest, DiagnosticPayload, Lang, Report, ReportRequest } from '../shared/types';
+import type { ContactRequest } from '../shared/types';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -11,8 +11,5 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  diagnostic: (lang: Lang) => request<DiagnosticPayload>(`/api/diagnostic?lang=${lang}`),
-  report: (payload: ReportRequest) =>
-    request<{ ok: true; report: Report }>('/api/diagnostic/report', { method: 'POST', body: JSON.stringify(payload) }).then((r) => r.report),
   contact: (payload: ContactRequest) => request<{ ok: true }>('/api/contact', { method: 'POST', body: JSON.stringify(payload) }),
 };

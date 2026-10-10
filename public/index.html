@@ -107,29 +107,49 @@
     </section>
 
     <!-- Text riding a moving wave -->
-    <div class="wave-marquee" data-wave-marquee aria-hidden="true">
-      <svg viewBox="0 0 1600 220" preserveAspectRatio="none">
-        <path id="marquee-path" d="" fill="none" />
-        <text><textPath href="#marquee-path" data-marquee-text>STRATEGY ✦ CONTENT ✦ MEDIA ✦ SYSTEMS ✦ MOVEMENT ✦ STRATEGY ✦ CONTENT ✦ MEDIA ✦ SYSTEMS ✦ MOVEMENT ✦ STRATEGY ✦ CONTENT ✦ MEDIA ✦ SYSTEMS ✦ MOVEMENT ✦</textPath></text>
-      </svg>
+    <!-- Words bobbing on a wave (pure CSS, GPU-friendly) -->
+    <div class="wave-marquee" aria-hidden="true">
+      <div class="wave-marquee__track"><span style="--i:0">STRATEGY</span><b style="--i:1">✦</b><span style="--i:2">CONTENT</span><b style="--i:3">✦</b><span style="--i:4">MEDIA</span><b style="--i:5">✦</b><span style="--i:6">SYSTEMS</span><b style="--i:7">✦</b><span style="--i:8">MOVEMENT</span><b style="--i:9">✦</b><span style="--i:10">STRATEGY</span><b style="--i:11">✦</b><span style="--i:12">CONTENT</span><b style="--i:13">✦</b><span style="--i:14">MEDIA</span><b style="--i:15">✦</b><span style="--i:16">SYSTEMS</span><b style="--i:17">✦</b><span style="--i:18">MOVEMENT</span><b style="--i:19">✦</b><span style="--i:20">STRATEGY</span><b style="--i:21">✦</b><span style="--i:22">CONTENT</span><b style="--i:23">✦</b><span style="--i:24">MEDIA</span><b style="--i:25">✦</b><span style="--i:26">SYSTEMS</span><b style="--i:27">✦</b><span style="--i:28">MOVEMENT</span><b style="--i:29">✦</b><span style="--i:30">STRATEGY</span><b style="--i:31">✦</b><span style="--i:32">CONTENT</span><b style="--i:33">✦</b><span style="--i:34">MEDIA</span><b style="--i:35">✦</b><span style="--i:36">SYSTEMS</span><b style="--i:37">✦</b><span style="--i:38">MOVEMENT</span><b style="--i:39">✦</b></div>
     </div>
 
-    <!-- ───────────────────── STORY: flatline → wave ───────────────────── -->
+    <!-- ───────────────────── STORY: a book that turns as you scroll ───────────────────── -->
     <section class="story" id="story" data-story>
       <div class="story__sticky">
+        <svg class="story__wave" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
+          <path class="story__wave-line" data-story-path d="" />
+        </svg>
         <div class="container story__head">
           <span class="section-tag"><i>01</i> <span data-i18n="story.tag">The story</span></span>
           <span class="story__readout"><span data-i18n="story.signal">Brand signal</span> <b data-story-readout>00%</b></span>
         </div>
-        <svg class="story__wave" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
-          <path class="story__wave-glow" data-story-path-glow d="" />
-          <path class="story__wave-line" data-story-path d="" />
-        </svg>
-        <div class="container story__texts">
-          <p class="story__step" data-step="0" data-i18n="story.s1">Some brands are active, but not truly moving.</p>
-          <p class="story__step" data-step="1" data-i18n="story.s2">They create content. Run ads. Invest in marketing. Yet nothing really shifts.</p>
-          <p class="story__step" data-step="2" data-i18n="story.s3">Because activity isn't progress, reach isn't always growth, and content alone isn't strategy.</p>
-          <h2 class="story__step story__step--big" data-step="3" data-i18n-html="story.s4">We're here to create <em>a wave.</em></h2>
+
+        <div class="book" data-book>
+          <div class="book__stack" aria-hidden="true"></div>
+          <article class="page" data-page="0">
+            <span class="page__chapter" data-i18n="story.c1">Chapter one · The observation</span>
+            <p class="page__text" data-i18n="story.s1">Some brands are active, but not truly moving.</p>
+            <span class="page__num">01 / 04</span>
+          </article>
+          <article class="page" data-page="1">
+            <span class="page__chapter" data-i18n="story.c2">Chapter two · The symptoms</span>
+            <p class="page__text" data-i18n="story.s2">They create content. Run ads. Invest in marketing. Yet nothing really shifts.</p>
+            <span class="page__num">02 / 04</span>
+          </article>
+          <article class="page" data-page="2">
+            <span class="page__chapter" data-i18n="story.c3">Chapter three · The truth</span>
+            <p class="page__text" data-i18n="story.s3">Because activity isn't progress, reach isn't always growth, and content alone isn't strategy.</p>
+            <span class="page__num">03 / 04</span>
+          </article>
+          <article class="page page--final" data-page="3">
+            <span class="page__chapter" data-i18n="story.c4">Chapter four · The beginning</span>
+            <h2 class="page__big" data-i18n-html="story.s4">We're here to create <em>a wave.</em></h2>
+            <span class="page__num">04 / 04</span>
+          </article>
+        </div>
+
+        <div class="story__foot container">
+          <div class="story__dots" data-book-dots><span></span><span></span><span></span><span></span></div>
+          <button type="button" class="story__next" data-book-next><span data-i18n="story.next">Scroll or tap to turn the page</span> <i>↓</i></button>
         </div>
       </div>
     </section>

@@ -12,7 +12,7 @@ import {
 import { initLang, onLangChange } from './i18n';
 import { initPulse } from './pulse';
 import { reducedMotion } from './ticker';
-import { initApproach, initFooterFill, initLogoWave, initWaveMarquee } from './waves/ambient';
+import { initApproach, initFooterFill, initLogoWave } from './waves/ambient';
 import { initHeroWaves } from './waves/heroWaves';
 import { initStory } from './waves/story';
 import { initTitleHover, playWaveText, splitWaveText } from './waves/waveText';
@@ -32,8 +32,6 @@ function boot() {
   if (nav) initNav(nav);
   const story = $('[data-story]');
   if (story) initStory(story);
-  const marquee = $('[data-wave-marquee]');
-  if (marquee) initWaveMarquee(marquee);
   const approach = $('[data-approach]');
   if (approach) initApproach(approach);
   const logos = $('[data-logo-wave]');

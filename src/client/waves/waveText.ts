@@ -69,7 +69,18 @@ export function initTitleHover(title: HTMLElement) {
   let my = -9999;
   let active = 0;
 
+  let centers: { el: HTMLElement; x: number; y: number }[] = [];
+  const measure = () => {
+    centers = Array.from(title.querySelectorAll<HTMLElement>('.is-settled .wt-char, .is-settled .wt-word')).map((el) => {
+      const r = el.getBoundingClientRect();
+      return { el, x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    });
+  };
+  title.addEventListener('pointerenter', measure);
+  window.addEventListener('scroll', () => (centers = []), { passive: true });
+
   title.addEventListener('pointermove', (e) => {
+    if (!centers.length) measure();
     mx = e.clientX;
     my = e.clientY;
   });
@@ -82,11 +93,9 @@ export function initTitleHover(title: HTMLElement) {
   onFrameWhileVisible(title, (t) => {
     active = lerp(active, mx > -999 ? 1 : 0, 0.08);
     if (active < 0.002) return;
-    title.querySelectorAll<HTMLElement>('.is-settled .wt-char, .is-settled .wt-word').forEach((ch) => {
-      const r = ch.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
+    centers.forEach(({ el: ch, x: cx, y: cy }) => {
       const dx = cx - mx;
-      const near = Math.exp(-(dx * dx) / (2 * 120 * 120)) * Math.exp(-((r.top + r.height / 2 - my) ** 2) / (2 * 260 * 260));
+      const near = Math.exp(-(dx * dx) / (2 * 120 * 120)) * Math.exp(-((cy - my) ** 2) / (2 * 260 * 260));
       const target = -near * active * (18 + 10 * Math.sin(t * 6 - cx * 0.02));
       const cur = lerp(offsets.get(ch) ?? 0, target, 0.18);
       offsets.set(ch, cur);

@@ -3,9 +3,9 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import type { DiagnosticPayload, Lang } from '../../shared/types.js';
-import { getQuestions } from '../data/diagnostic.js';
+import { getQuestions } from '../../shared/diagnostic.js';
 import type { LeadStore } from '../lib/leadStore.js';
-import { ReportError, buildReport } from '../services/report.js';
+import { ReportError, buildReport } from '../../shared/report.js';
 
 const langSchema = z.enum(['en', 'ar']).catch('en');
 

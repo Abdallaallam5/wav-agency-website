@@ -1,5 +1,6 @@
 import type { Answer, Question, Report, ServiceKey } from '../shared/types';
-import { api } from './api';
+import { getQuestions } from '../shared/diagnostic';
+import { buildReport } from '../shared/report';
 import { getLang, onLangChange, t } from './i18n';
 import { lerp, onFrameWhileVisible, reducedMotion } from './ticker';
 
@@ -41,13 +42,14 @@ export function initPulse(root: HTMLElement) {
   let busy = false;
 
   // ---------- data ----------
-  async function load() {
-    questions = (await api.diagnostic(getLang())).questions;
+  // Questions ship inside the bundle, so the pulse check works without any API call.
+  function load() {
+    questions = getQuestions(getLang());
     dotsEl.innerHTML = questions.map(() => '<span></span>').join('');
   }
-  const loaded = load().catch(() => {
-    card.innerHTML = `<p class="sol__text">${esc(t('ui.error'))}</p>`;
-  });
+  load();
+  const makeReport = () =>
+    buildReport({ lang: getLang(), answers: [...picks].map(([questionId, answerId]) => ({ questionId, answerId })) });
 
   const pickedAnswer = (q: Question): Answer | undefined => q.answers.find((a) => a.id === picks.get(q.id));
 
@@ -230,7 +232,6 @@ export function initPulse(root: HTMLElement) {
   card.addEventListener('click', async (e) => {
     const target = e.target as HTMLElement;
     if (target.closest('[data-pulse-start]')) {
-      await loaded;
       if (questions.length) go({ kind: 'question', i: 0 });
       return;
     }
@@ -261,31 +262,12 @@ export function initPulse(root: HTMLElement) {
   });
 
   async function showReport() {
-    const btn = card.querySelector<HTMLButtonElement>('[data-next]');
-    if (btn) {
-      btn.disabled = true;
-      btn.querySelector('span')!.textContent = t('ui.loading');
-    }
-    try {
-      const report = await api.report({
-        lang: getLang(),
-        answers: [...picks].map(([questionId, answerId]) => ({ questionId, answerId })),
-      });
-      await go({ kind: 'report', report });
-    } catch {
-      if (btn) {
-        btn.disabled = false;
-        btn.querySelector('span')!.textContent = t('ui.error');
-      }
-    }
+    await go({ kind: 'report', report: makeReport() });
   }
 
-  onLangChange(async () => {
-    await load().catch(() => undefined);
-    if (view.kind === 'report') {
-      const report = await api.report({ lang: getLang(), answers: [...picks].map(([questionId, answerId]) => ({ questionId, answerId })) });
-      view = { kind: 'report', report };
-    }
+  onLangChange(() => {
+    load();
+    if (view.kind === 'report') view = { kind: 'report', report: { ...makeReport(), planId: view.report.planId } };
     card.innerHTML = htmlFor(view);
     updateProgress();
     if (view.kind === 'report') animateScore(view.report.score);
