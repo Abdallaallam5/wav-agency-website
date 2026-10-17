@@ -62,6 +62,13 @@ export const SERVICES: Record<ServiceKey, { name: T; pitch: T }> = {
       ar: 'Growth systems وتحليل بيانات وتقارير KPI وMarketing automation.',
     },
   },
+  consulting: {
+    name: { en: 'Business Experience Consulting', ar: 'استشارات تجربة البيزنس' },
+    pitch: {
+      en: 'Customer experience, process optimization and business transformation.',
+      ar: 'تجربة العملاء وتحسين العمليات والتحول في البيزنس.',
+    },
+  },
   print: {
     name: { en: 'Print & Production', ar: 'الطباعة والإنتاج' },
     pitch: {
@@ -371,7 +378,7 @@ const QUESTIONS: QuestionDef[] = [
           ],
           outcome: { en: 'Your team sells; the system handles the rest.', ar: 'فريقك يبيع… والسيستم يعمل الباقي.' },
         },
-        services: ['tech', 'growth'],
+        services: ['tech', 'growth', 'consulting'],
         severity: 2,
       },
     ],
@@ -501,7 +508,7 @@ const QUESTIONS: QuestionDef[] = [
           ],
           outcome: { en: 'Recognized the same way, everywhere.', ar: 'يعرفوك بنفس الشكل في كل حتة.' },
         },
-        services: ['print', 'strategy'],
+        services: ['print', 'strategy', 'consulting'],
         severity: 2,
       },
       {

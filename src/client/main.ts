@@ -11,6 +11,7 @@ import {
 } from './fx/interactions';
 import { initLang, onLangChange } from './i18n';
 import { initPulse } from './pulse';
+import { initKpis, initShowcase } from './showcase';
 import { reducedMotion } from './ticker';
 import { initApproach, initFooterFill, initLogoWave } from './waves/ambient';
 import { initHeroWaves } from './waves/heroWaves';
@@ -38,6 +39,10 @@ function boot() {
   if (logos) initLogoWave(logos);
   const footerFill = $('[data-footer-fill]');
   if (footerFill) initFooterFill(footerFill);
+  const work = $('[data-work]');
+  if (work) initShowcase(work);
+  const kpis = $('[data-kpis]');
+  if (kpis) initKpis(kpis);
   const pulse = $('[data-pulse]');
   if (pulse) initPulse(pulse);
   const form = $<HTMLFormElement>('[data-contact-form]');

@@ -12,7 +12,7 @@ import { lerp, onFrameWhileVisible, reducedMotion } from './ticker';
 
 type View = { kind: 'intro' } | { kind: 'question'; i: number } | { kind: 'solution'; i: number } | { kind: 'report'; report: Report };
 
-const SERVICE_INDEX: Record<ServiceKey, number> = { strategy: 1, content: 2, media: 3, tech: 4, digital: 5, growth: 6, print: 7 };
+const SERVICE_INDEX: Record<ServiceKey, number> = { strategy: 1, content: 2, media: 3, tech: 4, digital: 5, growth: 6, print: 7, consulting: 8 };
 const LEVELS = {
   en: ['Flatline', 'Ripple', 'Rising', 'Wave'],
   ar: ['خط مستقيم', 'تموّج خفيف', 'في الطلوع', 'Wave'],

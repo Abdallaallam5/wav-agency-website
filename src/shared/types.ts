@@ -9,7 +9,8 @@ export type ServiceKey =
   | 'tech'
   | 'digital'
   | 'growth'
-  | 'print';
+  | 'print'
+  | 'consulting';
 
 export interface Solution {
   /** Short name of the WAV fix, e.g. "A content system, not a posting schedule". */

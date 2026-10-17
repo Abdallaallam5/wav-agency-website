@@ -26,9 +26,11 @@ NODE_ENV=production npm start   # PORT env var optional (default 3000)
 | Hero | Canvas "silk ribbon" waves. They bend toward the cursor, and clicks send out ripples. The headline letters rise on a wave and lift when you hover. |
 | Wave marquee | Words bobbing on a wave (pure CSS) |
 | Story | A book whose pages turn as you scroll, or when tapped, while a flat EKG line behind it grows into a wave |
-| Approach | A dotted wave path that draws itself as you scroll |
 | **Pulse check** | The interactive centerpiece. Six questions about brand weaknesses. Each answer shows our diagnosis and the WAV solution. A live "brand signal" goes from noise to a clean wave. Ends with a momentum score, findings, and a plan that can be attached to the contact form. |
-| Services | A liquid wave fills each card on hover, with a ripple where the pointer enters |
+| FORWARD framework | Understand → Identify → Build → Move, drawn along a wave as you scroll |
+| Services | 8 services. A liquid wave fills each card on hover, with a ripple where the pointer enters |
+| Work | Industry tabs (Food & Beverage, FMCG, Automotive, Corporate, Organizations), and the campaign posters rise in on a wave |
+| KPIs | Count-up KPI cards and growing charts, taken from the company profile |
 | Clients | Two logo marquees, with the logos bobbing on a travelling wave |
 | Footer | A liquid wave fills the "WAV" wordmark |
 
@@ -57,7 +59,8 @@ public/              index.html, css/styles.css, assets (images taken from the c
 
 - **Contact details**: the profile has no email, phone or socials, so the contact section only shows the website and "Egypt". Add yours in `public/index.html` (`.contact__info`).
 - **Leads**: leads are saved to `data/leads.json` locally (on Vercel: function logs). Connect `LeadStore` to email, WhatsApp, a CRM or a database.
-- **Case studies**: the Work section uses the Moamenoon and Crazy Crisps/Honey visuals from the profile. Swap in higher-resolution originals if you have them.
+- **Work posters**: cropped from the 2026 company profile (`public/assets/work/posters/`). Replace them with the original files for sharper images.
+- **KPIs**: the numbers come from the company profile (slide 14). Keep them in sync with real results.
 
 ## Deploy on Vercel
 
