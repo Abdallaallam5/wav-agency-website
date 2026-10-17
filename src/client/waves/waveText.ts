@@ -29,6 +29,8 @@ export function splitWaveText(el: HTMLElement, baseDelay = 0) {
   el.setAttribute('aria-label', text);
 
   const frag = document.createDocumentFragment();
+  // Letters are grouped per word so a line never breaks in the middle of a word.
+  let group: HTMLElement | null = null;
   parts.forEach((part, i) => {
     const span = document.createElement('span');
     span.setAttribute('aria-hidden', 'true');
@@ -42,7 +44,18 @@ export function splitWaveText(el: HTMLElement, baseDelay = 0) {
     }
     span.style.setProperty('--i', String(i));
     span.style.setProperty('--d', `${baseDelay}s`);
-    frag.appendChild(span);
+    if (!byWord && span.className === 'wt-char') {
+      if (!group) {
+        group = document.createElement('span');
+        group.className = 'wt-group';
+        group.setAttribute('aria-hidden', 'true');
+        frag.appendChild(group);
+      }
+      group.appendChild(span);
+    } else {
+      group = null;
+      frag.appendChild(span);
+    }
     if (byWord && i < parts.length - 1) frag.appendChild(document.createTextNode(' '));
   });
   el.appendChild(frag);
