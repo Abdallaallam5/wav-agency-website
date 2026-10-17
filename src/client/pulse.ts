@@ -38,7 +38,8 @@ export function initPulse(root: HTMLElement) {
 
   let questions: Question[] = [];
   const picks = new Map<string, string>();
-  let view: View = { kind: 'intro' };
+  // Open straight on the first question so visitors see right away that it's interactive.
+  let view: View = { kind: 'question', i: 0 };
   let busy = false;
 
   // ---------- data ----------
@@ -65,6 +66,7 @@ export function initPulse(root: HTMLElement) {
     return `<div class="q">
       ${top(q, i)}
       <h3 class="q__text" tabindex="-1">${esc(q.text)}</h3>
+      ${i === 0 && picks.size === 0 ? `<p class="q__hint"><span class="q__hint-hand" aria-hidden="true">👆</span>${esc(t('ui.pickHint'))}</p>` : ''}
       <div class="q__answers">
         ${q.answers
           .map(
@@ -333,4 +335,8 @@ export function initPulse(root: HTMLElement) {
     ctx.globalAlpha = 1;
   };
   onFrameWhileVisible(canvas, draw);
+
+  // First paint: question 1 is on screen from the start.
+  card.innerHTML = htmlFor(view);
+  updateProgress();
 }

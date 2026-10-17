@@ -9,6 +9,7 @@ import {
   initSpotlight,
   initTilt,
 } from './fx/interactions';
+import { initServicesGrid } from './fx/servicesGrid';
 import { initLang, onLangChange } from './i18n';
 import { initPulse } from './pulse';
 import { initKpis, initShowcase } from './showcase';
@@ -39,6 +40,8 @@ function boot() {
   if (logos) initLogoWave(logos);
   const footerFill = $('[data-footer-fill]');
   if (footerFill) initFooterFill(footerFill);
+  const services = $('.services__grid');
+  if (services) initServicesGrid(services);
   const work = $('[data-work]');
   if (work) initShowcase(work);
   const kpis = $('[data-kpis]');

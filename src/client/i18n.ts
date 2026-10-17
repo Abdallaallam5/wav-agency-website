@@ -68,6 +68,9 @@ const AR: Record<string, string> = {
   'pulse.introTitle': 'البراند بتاعك بيتحرك… ولا نشيط وبس؟',
   'pulse.introText': 'من غير إيميل. ومن غير بيع غير لما تطلب.',
   'pulse.start': 'ابدأ الفحص',
+  'pulse.how1': 'جاوب على 6 أسئلة سريعة',
+  'pulse.how2': 'شوف الحل لكل إجابة',
+  'pulse.how3': 'خد تقرير البراند بتاعك',
 
   'services.tag': 'خدماتنا',
   'services.title': '8 خدمات. <br /><em>نظام واحد.</em>',
@@ -149,6 +152,7 @@ const UI: Record<Lang, Record<string, string>> = {
   en: {
     'ui.question': 'Question',
     'ui.seeFix': 'See the fix',
+    'ui.pickHint': "Tap the answer that sounds most like you. We'll show you the fix.",
     'ui.youSaid': 'You said',
     'ui.problem': 'The real problem',
     'ui.strength': 'Strength',
@@ -176,6 +180,7 @@ const UI: Record<Lang, Record<string, string>> = {
   ar: {
     'ui.question': 'سؤال',
     'ui.seeFix': 'شوف الحل',
+    'ui.pickHint': 'دوس على الإجابة اللي شبهك أكتر، وهنوريك الحل.',
     'ui.youSaid': 'انت قلت',
     'ui.problem': 'المشكلة الحقيقية',
     'ui.strength': 'نقطة قوة',
