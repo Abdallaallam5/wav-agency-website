@@ -283,10 +283,6 @@ html[lang='ar'] .page__big { font-weight: 900; text-transform: none; line-height
 .story__dots { display: flex; gap: 8px; }
 .story__dots span { width: 34px; height: 4px; border-radius: 4px; background: var(--line-strong); transition: background 0.4s; }
 .story__dots span.is-on { background: var(--grad); }
-.story__next { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.85rem; transition: opacity 0.3s, color 0.3s; }
-.story__next:hover { color: var(--lime); }
-.story__next i { font-style: normal; display: inline-block; animation: nudge 1.4s ease-in-out infinite; }
-.story__next.is-hidden { opacity: 0; pointer-events: none; }
 @keyframes nudge { 50% { transform: translateY(5px); } }
 @media (max-width: 600px) { .book { aspect-ratio: auto; height: 56svh; } }
 
@@ -707,3 +703,50 @@ html[lang='ar'] .showcase__info h3 { font-weight: 900; text-transform: none; lin
 /* Contact background: soft, edge-faded */
 .contact__bg { opacity: 0.28; mask-image: radial-gradient(ellipse 60% 55% at 50% 55%, #000 35%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 55%, #000 35%, transparent 75%); }
 .story__readout b { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+
+/* ---------- Story: "keep reading" hint ---------- */
+.story__next {
+  display: inline-flex; align-items: center; gap: 14px;
+  padding: 12px 22px 12px 16px; border-radius: 999px;
+  background: rgba(200, 255, 61, 0.08); border: 1px solid rgba(200, 255, 61, 0.45);
+  color: var(--text); text-align: start;
+  box-shadow: 0 0 0 0 rgba(200, 255, 61, 0.35);
+  animation: hintGlow 2.2s ease-out infinite;
+  transition: opacity 0.4s, transform 0.4s var(--ease-out), background 0.3s;
+}
+.story__next:hover { background: rgba(200, 255, 61, 0.16); transform: translateY(-2px); }
+.story__next.is-hidden { opacity: 0; transform: translateY(10px); pointer-events: none; animation: none; }
+@keyframes hintGlow { 0% { box-shadow: 0 0 0 0 rgba(200, 255, 61, 0.35); } 70%, 100% { box-shadow: 0 0 0 14px rgba(200, 255, 61, 0); } }
+
+.story__mouse { width: 20px; height: 30px; flex: none; fill: none; stroke: var(--lime); stroke-width: 2; }
+.story__wheel { stroke-linecap: round; stroke-width: 2.5; animation: wheel 1.6s ease-in-out infinite; }
+@keyframes wheel { 0% { transform: translateY(0); opacity: 1; } 70% { transform: translateY(9px); opacity: 0; } 100% { transform: translateY(0); opacity: 0; } }
+
+.story__next-text { display: grid; line-height: 1.25; }
+.story__next-text b { font-size: 0.95rem; font-weight: 700; color: var(--lime); }
+.story__next-text small { font-size: 0.76rem; color: var(--muted); }
+
+.story__chevrons { display: grid; gap: 1px; }
+.story__chevrons i { display: block; width: 10px; height: 10px; border-right: 2px solid var(--lime); border-bottom: 2px solid var(--lime); transform: rotate(45deg); animation: chev 1.4s ease-in-out infinite; }
+.story__chevrons i:last-child { animation-delay: 0.18s; }
+@keyframes chev { 0%, 100% { opacity: 0.2; transform: rotate(45deg) translate(-2px, -2px); } 50% { opacity: 1; transform: rotate(45deg) translate(2px, 2px); } }
+
+/* Folded page corner that wiggles, like a page waiting to be turned */
+.page:not(.page--final)::before {
+  content: ''; position: absolute; bottom: -1px; inset-inline-end: -1px; width: 46px; height: 46px;
+  background: linear-gradient(315deg, var(--bg) 50%, rgba(200, 255, 61, 0.85) 50%, #8fb82a 100%);
+  border-top-left-radius: 10px; box-shadow: -4px -4px 12px rgba(0, 0, 0, 0.45);
+  transform-origin: bottom right; opacity: 0; transition: opacity 0.4s;
+}
+html[dir='rtl'] .page:not(.page--final)::before { background: linear-gradient(45deg, var(--bg) 50%, rgba(200, 255, 61, 0.85) 50%, #8fb82a 100%); border-top-left-radius: 0; border-top-right-radius: 10px; transform-origin: bottom left; box-shadow: 4px -4px 12px rgba(0, 0, 0, 0.45); }
+.page.is-current:not(.page--final)::before { opacity: 1; animation: curl 2.4s ease-in-out infinite; }
+@keyframes curl { 0%, 60%, 100% { transform: scale(1); } 75% { transform: scale(1.35); } 85% { transform: scale(1.1); } }
+.page__num { inset-inline-end: 64px; }
+
+@media (max-width: 600px) {
+  .story__next { padding: 10px 16px 10px 12px; gap: 10px; }
+  .story__next-text b { font-size: 0.88rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story__next, .story__wheel, .story__chevrons i, .page.is-current::before { animation: none; }
+}

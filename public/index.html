@@ -145,7 +145,11 @@
 
         <div class="story__foot container">
           <div class="story__dots" data-book-dots><span></span><span></span><span></span><span></span></div>
-          <button type="button" class="story__next" data-book-next><span data-i18n="story.next">Scroll or tap to turn the page</span> <i>↓</i></button>
+          <button type="button" class="story__next" data-book-next>
+            <svg class="story__mouse" viewBox="0 0 24 36" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="33" rx="10.5" /><line class="story__wheel" x1="12" y1="8" x2="12" y2="13" /></svg>
+            <span class="story__next-text"><b data-i18n="story.next">Scroll down to keep reading</b><small data-i18n="story.nextSub">or tap the book to turn the page</small></span>
+            <span class="story__chevrons" aria-hidden="true"><i></i><i></i></span>
+          </button>
         </div>
       </div>
     </section>
