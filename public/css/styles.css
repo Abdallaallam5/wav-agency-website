@@ -888,3 +888,4 @@ html[lang='ar'] .dashboard__period, html[lang='ar'] .dashboard__badge { font-siz
 
 /* Six posters sit in a tidy 3 x 2 grid on larger screens */
 @media (min-width: 601px) { .showcase__grid--six { grid-template-columns: repeat(3, 1fr); } }
+.hero__lead strong { white-space: nowrap; }
