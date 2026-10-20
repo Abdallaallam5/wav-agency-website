@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { DiagnosticPayload, Lang } from '../../shared/types.js';
 import { getQuestions } from '../../shared/diagnostic.js';
 import type { LeadStore } from '../lib/leadStore.js';
+import { mailLead } from '../lib/mailer.js';
 import { ReportError, buildReport } from '../../shared/report.js';
 
 const langSchema = z.enum(['en', 'ar']).catch('en');
@@ -18,8 +19,18 @@ const reportSchema = z.object({
 });
 
 const contactSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  company: z.string().trim().max(120).optional(),
+  name: z
+    .string()
+    .trim()
+    .min(2)
+    .max(80)
+    .refine((v) => !/[\r\n]/.test(v), 'One line only'),
+  company: z
+    .string()
+    .trim()
+    .max(120)
+    .refine((v) => !/[\r\n]/.test(v), 'One line only')
+    .optional(),
   contact: z
     .string()
     .trim()
@@ -90,8 +101,26 @@ export function apiRouter(leads: LeadStore): Router {
       return;
     }
     const { website: _honeypot, ...data } = parsed.data;
-    await leads.add({ id: randomUUID(), receivedAt: new Date().toISOString(), ip: req.ip, ...data });
-    res.status(201).json({ ok: true });
+    const lead = { id: randomUUID(), receivedAt: new Date().toISOString(), ip: req.ip, ...data };
+
+    // Two copies, so a lead is never lost: our own store/log and an email to the WAV inbox.
+    // Both are awaited: on Vercel the function may be frozen as soon as the response is sent.
+    const [stored, emailed] = await Promise.all([
+      leads.add(lead).then(
+        () => true,
+        (err) => {
+          console.error('[lead] could not store:', (err as Error).message);
+          return false;
+        },
+      ),
+      mailLead(lead),
+    ]);
+    if (!stored && !emailed) {
+      res.status(500).json({ ok: false, error: 'Could not save your request.' });
+      return;
+    }
+    // emailed=false tells the browser to fall back to the email relay.
+    res.status(201).json({ ok: true, emailed });
   });
 
   return router;

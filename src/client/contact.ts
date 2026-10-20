@@ -129,13 +129,14 @@ export function initContact(form: HTMLFormElement) {
     submit.disabled = true;
     setStatus(t('form.sending'));
     try {
-      // Two independent channels, so a lead is never lost:
-      //  1. our own API (validation, spam check, logged on the server)
-      //  2. the email relay that delivers it to the WAV inbox (best effort, runs in the background)
-      const mail = payload.website ? Promise.resolve() : sendLeadEmail(payload);
-      mail.catch(() => undefined);
+      // Our own server saves the lead and emails it to the WAV inbox. If it could not send that email,
+      // the browser uses the FormSubmit relay as a backup, so a lead is never lost.
+      let mail: Promise<void> | null = null;
+      const relay = () => (mail ??= payload.website ? Promise.resolve() : sendLeadEmail(payload));
       try {
-        await api.contact(payload);
+        const res = await api.contact(payload);
+        // The server already emailed it? Great. If not (no mail settings, or the mail server failed), use the relay.
+        if (!res.emailed) relay().catch(() => undefined);
       } catch (err) {
         // The server rejected the fields themselves: show which one.
         const field = (err as { field?: string }).field;
@@ -146,7 +147,7 @@ export function initContact(form: HTMLFormElement) {
         }
         // Server unreachable: the email is our only copy, so wait for it.
         try {
-          await mail;
+          await relay();
         } catch {
           throw new Error(`Could not reach ${LEADS_EMAIL}`);
         }

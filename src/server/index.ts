@@ -1,4 +1,11 @@
-import app from './app.js';
+// Local development only: read SMTP_* and friends from .env if the file exists (Vercel uses its own settings).
+try {
+  process.loadEnvFile();
+} catch {
+  /* no .env file: fine */
+}
+
+const { default: app } = await import('./app.js');
 
 const PORT = Number(process.env.PORT) || 3000;
 

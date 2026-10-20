@@ -11,5 +11,5 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  contact: (payload: ContactRequest) => request<{ ok: true }>('/api/contact', { method: 'POST', body: JSON.stringify(payload) }),
+  contact: (payload: ContactRequest) => request<{ ok: true; emailed?: boolean }>('/api/contact', { method: 'POST', body: JSON.stringify(payload) }),
 };
