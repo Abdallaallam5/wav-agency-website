@@ -16,6 +16,8 @@ app.set('trust proxy', 1);
 
 app.use(
   helmet({
+    // Helmet defaults to no-referrer, which makes the browser send `Origin: null` to the email relay and get rejected.
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -23,7 +25,8 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'"],
+        // formsubmit.co delivers contact-form leads to the WAV inbox (see src/client/leadEmail.ts)
+        connectSrc: ["'self'", 'https://formsubmit.co'],
         // Dev only: helmet would otherwise force https on localhost.
         upgradeInsecureRequests: isProd ? [] : null,
       },

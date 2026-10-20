@@ -29,8 +29,8 @@ NODE_ENV=production npm start   # PORT env var optional (default 3000)
 | **Pulse check** | The interactive centerpiece. Six questions about brand weaknesses. Each answer shows our diagnosis and the WAV solution. A live "brand signal" goes from noise to a clean wave. Ends with a momentum score, findings, and a plan that can be attached to the contact form. |
 | FORWARD framework | Understand → Identify → Build → Move, drawn along a wave as you scroll |
 | Services | 8 services. A liquid wave fills each card on hover, with a ripple where the pointer enters |
-| Work | Industry tabs (Food & Beverage, FMCG, Automotive, Corporate, Organizations), and the campaign posters rise in on a wave |
-| KPIs | Count-up KPI cards and growing charts, taken from the company profile |
+| Work | Six industry tabs with campaign posters (no client names in the text), "show more" for long groups and a full-size viewer |
+| KPIs | Count-up KPI cards (cost per lead in EGP), leads & conversion chart, leads-by-source donut, campaign performance and social growth, taken from the company profile |
 | Clients | Two logo marquees, with the logos bobbing on a travelling wave |
 | Footer | A liquid wave fills the "WAV" wordmark |
 
@@ -57,8 +57,8 @@ public/              index.html, css/styles.css, assets (images taken from the c
 
 ## Before going live
 
-- **Contact details**: the profile has no email, phone or socials, so the contact section only shows the website and "Egypt". Add yours in `public/index.html` (`.contact__info`).
-- **Leads**: leads are saved to `data/leads.json` locally (on Vercel: function logs). Connect `LeadStore` to email, WhatsApp, a CRM or a database.
+- **Leads / contact form**: each submission goes two ways: (1) `POST /api/contact` (validated, saved to `data/leads.json` locally, printed to the function logs on Vercel) and (2) an email to `wavagency.eg@gmail.com` through FormSubmit (`src/client/leadEmail.ts`). **One-time step:** the first submission makes FormSubmit email an "Activate Form" link to that address. Click it once, then every lead arrives in the inbox. To change the inbox, edit `LEADS_EMAIL` in `src/client/leadEmail.ts`.
+- **Contact details**: email and phone are in `public/index.html` (`.contact__info`).
 - **Work posters**: cropped from the 2026 company profile (`public/assets/work/posters/`). Replace them with the original files for sharper images.
 - **KPIs**: the numbers come from the company profile (slide 14). Keep them in sync with real results.
 

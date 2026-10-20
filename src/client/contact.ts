@@ -1,5 +1,6 @@
 import type { ContactRequest, Report } from '../shared/types';
 import { api } from './api';
+import { LEADS_EMAIL, sendLeadEmail } from './leadEmail';
 import { getLang, t } from './i18n';
 
 export function initContact(form: HTMLFormElement) {
@@ -78,14 +79,27 @@ export function initContact(form: HTMLFormElement) {
     submit.disabled = true;
     setStatus(t('form.sending'));
     try {
-      await api.contact(payload);
+      // Two independent channels, so a lead is never lost:
+      //  1. our own API (validation, spam check, logged on the server)
+      //  2. the email relay that delivers it to the WAV inbox
+      const [server, mail] = await Promise.allSettled([api.contact(payload), payload.website ? Promise.resolve() : sendLeadEmail(payload)]);
+
+      // The server rejected the fields themselves: show which one.
+      if (server.status === 'rejected') {
+        const field = (server.reason as { field?: string }).field;
+        if (field) {
+          (form.elements.namedItem(field) as HTMLElement | null)?.closest('.field')?.classList.add('is-invalid');
+          setStatus(t('form.invalid'), 'err');
+          return;
+        }
+      }
+      if (server.status === 'rejected' && mail.status === 'rejected') throw new Error(`Could not reach ${LEADS_EMAIL}`);
+
       form.reset();
       chip.hidden = true;
       setStatus(t('form.ok'), 'ok');
-    } catch (err) {
-      const field = (err as { field?: string }).field;
-      if (field) (form.elements.namedItem(field) as HTMLElement | null)?.closest('.field')?.classList.add('is-invalid');
-      setStatus(field ? t('form.invalid') : t('form.err'), 'err');
+    } catch {
+      setStatus(t('form.err'), 'err');
     } finally {
       submit.disabled = false;
     }
