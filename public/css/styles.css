@@ -816,10 +816,7 @@ html[lang='ar'] .dashboard__period, html[lang='ar'] .dashboard__badge { font-siz
 .poster { aspect-ratio: 7 / 9; cursor: zoom-in; }
 .poster img { object-position: center; }
 .showcase__grid { align-content: start; }
-.showcase__grid.is-folded .poster:nth-child(n + 9) { display: none; }
 .showcase__panel { align-items: start; }
-.showcase__panel .showcase__more { grid-column: 2; justify-self: center; margin-top: 4px; padding: 12px 26px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--text); font-weight: 600; font-size: 0.92rem; transition: background 0.3s, border-color 0.3s; }
-.showcase__panel .showcase__more:hover { background: rgba(139, 61, 255, 0.18); border-color: var(--violet-2); }
 
 .viewer { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; background: rgba(5, 4, 9, 0.92); cursor: zoom-out; animation: fadeIn2 0.25s ease-out; }
 .viewer[hidden] { display: none; }
@@ -836,7 +833,6 @@ html[lang='ar'] .dashboard__period, html[lang='ar'] .dashboard__badge { font-siz
 .contact__info a { direction: ltr; unicode-bidi: isolate; overflow-wrap: anywhere; }
 .contact__info a:hover { text-decoration: underline; }
 
-@media (max-width: 1100px) { .showcase__panel .showcase__more { grid-column: 1; } }
 
 /* ---------- KPIs: combo chart, donut, social growth ---------- */
 .kpis__charts { grid-template-columns: 1.35fr 1fr 1fr; }
@@ -889,3 +885,6 @@ html[lang='ar'] .dashboard__period, html[lang='ar'] .dashboard__badge { font-siz
   .donut__seg { stroke-dasharray: var(--len) 100; }
   .combo__bar { transform: none; } .combo__line { stroke-dashoffset: 0; } .combo__dot, .combo__pct, .donut__pct { opacity: 1; }
 }
+
+/* Six posters sit in a tidy 3 x 2 grid on larger screens */
+@media (min-width: 601px) { .showcase__grid--six { grid-template-columns: repeat(3, 1fr); } }

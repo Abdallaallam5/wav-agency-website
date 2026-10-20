@@ -29,7 +29,7 @@ NODE_ENV=production npm start   # PORT env var optional (default 3000)
 | **Pulse check** | The interactive centerpiece. Six questions about brand weaknesses. Each answer shows our diagnosis and the WAV solution. A live "brand signal" goes from noise to a clean wave. Ends with a momentum score, findings, and a plan that can be attached to the contact form. |
 | FORWARD framework | Understand → Identify → Build → Move, drawn along a wave as you scroll |
 | Services | 8 services. A liquid wave fills each card on hover, with a ripple where the pointer enters |
-| Work | Six industry tabs with campaign posters (no client names in the text), "show more" for long groups and a full-size viewer |
+| Work | Six industry tabs with 2-6 campaign posters each (no client names in the text) and a full-size viewer |
 | KPIs | Count-up KPI cards (cost per lead in EGP), leads & conversion chart, leads-by-source donut, campaign performance and social growth, taken from the company profile |
 | Clients | Two logo marquees, with the logos bobbing on a travelling wave |
 | Footer | A liquid wave fills the "WAV" wordmark |

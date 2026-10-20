@@ -1,9 +1,7 @@
 import { getLang, onLangChange, t } from './i18n';
 import { reducedMotion } from './ticker';
 
-const VISIBLE = 8;
-
-/** Work section: industry tabs, a "show more" fold, and a full-size viewer for the posters. */
+/** Work section: industry tabs and a full-size viewer for the posters. */
 export function initShowcase(root: HTMLElement) {
   const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
   const panels = tabs.map((t) => document.getElementById(t.getAttribute('aria-controls')!)!);
@@ -48,35 +46,7 @@ export function initShowcase(root: HTMLElement) {
     { threshold: 0.2 },
   ).observe(root);
 
-  initFold(panels);
   initViewer(panels);
-}
-
-/** Groups with more than 8 posters start folded, with a button to reveal the rest. */
-function initFold(panels: HTMLElement[]) {
-  const refresh: (() => void)[] = [];
-  panels.forEach((panel) => {
-    const grid = panel.querySelector<HTMLElement>('.showcase__grid')!;
-    const extra = grid.children.length - VISIBLE;
-    if (extra <= 0) return;
-    grid.classList.add('is-folded');
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'showcase__more';
-    const paint = () => {
-      const folded = grid.classList.contains('is-folded');
-      btn.textContent = folded ? `${t('ui.showMore')} (+${extra})` : t('ui.showLess');
-      btn.setAttribute('aria-expanded', String(!folded));
-    };
-    btn.addEventListener('click', () => {
-      grid.classList.toggle('is-folded');
-      paint();
-    });
-    paint();
-    refresh.push(paint);
-    grid.after(btn);
-  });
-  onLangChange(() => refresh.forEach((fn) => fn()));
 }
 
 /** Click a poster to see it full size; arrow keys / swipe buttons move through the group. */
