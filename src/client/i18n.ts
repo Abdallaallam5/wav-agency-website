@@ -109,7 +109,7 @@ const AR: Record<string, string> = {
   'form.contact': 'إيميل أو موبايل / واتساب',
   'form.service': 'محتاج إيه أكتر حاجة؟',
   'form.serviceAny': 'مش متأكد لسه، ساعدني أقرر',
-  'form.message': 'اليوم والوقت المناسبين ليك، أو أي حاجة تحب نعرفها (اختياري)',
+  'form.message': 'عايز تحجز ميتينج؟ قولنا اليوم والوقت المناسبين ليك (اختياري)',
   'form.submit': 'احجز ميتينج',
 
   'footer.tag': 'متمشيش ورا الموجة. كون انت الموجة.',
@@ -167,6 +167,7 @@ const AR: Record<string, string> = {
   'kpi.s.visits': 'زيارات البروفايل',
   'kpi.s.engage': 'معدل التفاعل',
   'kpi.s.followers': 'نمو المتابعين',
+  'form.messagePh': 'مثلاً: يوم الأحد بعد 3 العصر، أو أي حاجة تحب نعرفها',
 };
 
 /** Strings rendered from JS (pulse check, form states) — both languages. */
@@ -189,11 +190,16 @@ const UI: Record<Lang, Record<string, string>> = {
     'ui.findings': 'What we found',
     'ui.noFindings': 'No major blockers. Time to scale.',
     'ui.plan': 'Your WAV plan: where we would start',
-    'ui.sendPlan': 'Send me this plan',
+    'ui.sendPlan': 'Book a meeting about this',
     'ui.planId': 'Plan',
-    'ui.planAttached': 'Pulse plan {id} attached · score {score} · {services}',
-    'ui.planMessage': 'From my pulse check: {findings}',
     'ui.level': 'Signal',
+    'ui.pulseKicker': 'Your brand pulse result',
+    'ui.pulseFindings': "Where it's stuck",
+    'ui.pulseServices': "Where we'd start",
+    'ui.pulseNote': "We'll see this result with your request, so the meeting starts from where you stand.",
+    'ui.pulseRemove': 'Remove the result',
+    'ui.pulseNone': 'No major blockers. Time to scale.',
+    'ui.meetingMessage': "I'd like to book a meeting to talk about my brand pulse check results.",
     'form.sending': 'Sending…',
     'form.ok': "Got it! We'll contact you shortly to set up the meeting.",
     'form.err': 'We could not send that. Please email wavagency.eg@gmail.com or call +20 10 5040 9317.',
@@ -222,11 +228,16 @@ const UI: Record<Lang, Record<string, string>> = {
     'ui.findings': 'اللي لقيناه',
     'ui.noFindings': 'مفيش معطّلات كبيرة. وقت التكبير.',
     'ui.plan': 'خطة WAV ليك: هنبدأ منين',
-    'ui.sendPlan': 'ابعتولي الخطة دي',
+    'ui.sendPlan': 'احجز ميتينج بالنتيجة دي',
     'ui.planId': 'الخطة',
-    'ui.planAttached': 'خطة الفحص {id} مرفقة · السكور {score} · {services}',
-    'ui.planMessage': 'من فحص النبض: {findings}',
     'ui.level': 'الإشارة',
+    'ui.pulseKicker': 'نتيجة فحص نبض البراند بتاعك',
+    'ui.pulseFindings': 'اللي معطّلك',
+    'ui.pulseServices': 'هنبدأ منين',
+    'ui.pulseNote': 'هنشوف النتيجة دي مع طلبك، فالميتينج يبدأ من النقطة اللي انت واقف فيها.',
+    'ui.pulseRemove': 'شيل النتيجة',
+    'ui.pulseNone': 'مفيش معطّلات كبيرة. وقت التكبير.',
+    'ui.meetingMessage': 'عايز أحجز ميتينج نتكلم فيه عن نتيجة فحص نبض البراند بتاعي.',
     'form.sending': 'بنبعت…',
     'form.ok': 'وصلتنا! هنكلمك قريب نحدد الميتينج.',
     'form.err': 'معرفناش نبعت. ابعتلنا على ⁦wavagency.eg@gmail.com⁩ أو كلمنا على ⁦+20 10 5040 9317⁩.',
@@ -259,6 +270,11 @@ function applyStatic(lang: Lang) {
     const key = el.dataset.i18n!;
     el.dataset.en ??= el.textContent ?? '';
     el.textContent = lang === 'ar' ? AR[key] ?? el.dataset.en : el.dataset.en;
+  });
+  document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.dataset.i18nPlaceholder!;
+    el.dataset.enPh ??= el.placeholder;
+    el.placeholder = lang === 'ar' ? AR[key] ?? el.dataset.enPh : el.dataset.enPh;
   });
   document.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach((el) => {
     const key = el.dataset.i18nHtml!;

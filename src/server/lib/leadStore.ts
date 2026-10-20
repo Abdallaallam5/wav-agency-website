@@ -10,6 +10,7 @@ export interface Lead {
   service?: string;
   message?: string;
   planId?: string;
+  pulse?: { score: number; level: string; findings: string[]; services: string[] };
   lang?: string;
   ip?: string;
 }

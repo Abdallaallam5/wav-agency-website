@@ -13,6 +13,8 @@ export async function sendLeadEmail(lead: ContactRequest): Promise<void> {
   const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.contact);
   const res = await fetch(`https://formsubmit.co/ajax/${LEADS_EMAIL}`, {
     method: 'POST',
+    // The relay can be slow; never keep the visitor waiting on it.
+    signal: AbortSignal.timeout(10_000),
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({
       _subject: `WAV website: meeting request from ${lead.name}`,
@@ -25,6 +27,9 @@ export async function sendLeadEmail(lead: ContactRequest): Promise<void> {
       interested_in: lead.service ?? '-',
       message: lead.message ?? '-',
       pulse_plan: lead.planId ?? '-',
+      pulse_result: lead.pulse
+        ? `${lead.pulse.score}/100 (${lead.pulse.level}) — Problems: ${lead.pulse.findings.join(' | ') || 'none'} — We'd start with: ${lead.pulse.services.join(', ')}`
+        : 'did not take the pulse check',
       language: lead.lang ?? 'en',
     }),
   });

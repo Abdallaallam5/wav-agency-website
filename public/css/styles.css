@@ -506,11 +506,6 @@ html[dir='rtl'] .field select { background-position: 20px 55%, 15px 55%; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--violet-2); background: rgba(139, 61, 255, 0.08); box-shadow: 0 0 0 4px rgba(139, 61, 255, 0.16); }
 .field.is-invalid input, .field.is-invalid textarea { border-color: #ff5c7a; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-.form__plan { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; background: rgba(200, 255, 61, 0.08); border: 1px solid rgba(200, 255, 61, 0.3); color: var(--lime); font-size: 0.88rem; }
-.form__plan svg { width: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-.form__plan span { flex: 1; }
-.form__plan button { font-size: 1.3rem; line-height: 1; color: var(--muted); }
-.form__plan[hidden] { display: none; }
 .form__status { margin: 0; min-height: 1.4em; font-size: 0.92rem; text-align: center; }
 .form__status.is-ok { color: var(--lime); }
 .form__status.is-err { color: #ff8aa1; }
@@ -890,3 +885,27 @@ html[lang='ar'] .dashboard__period, html[lang='ar'] .dashboard__badge { font-siz
 /* Six posters sit in a tidy 3 x 2 grid on larger screens */
 @media (min-width: 601px) { .showcase__grid--six { grid-template-columns: repeat(3, 1fr); } }
 .hero__lead strong { white-space: nowrap; }
+
+/* ---------- Contact form: pulse check result card ---------- */
+.form__pulse { display: grid; gap: 12px; padding: 16px; border-radius: 16px; background: linear-gradient(160deg, rgba(200, 255, 61, 0.09), rgba(139, 61, 255, 0.1)); border: 1px solid rgba(200, 255, 61, 0.35); animation: answerIn 0.6s var(--ease-out) both; }
+.form__pulse[hidden] { display: none; }
+.form__pulse-head { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
+.form__pulse-score { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: #0a0812; border: 2px solid rgba(200, 255, 61, 0.55); text-align: center; line-height: 1; }
+.form__pulse-score b { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 1.9rem; }
+.form__pulse-score small { font-size: 0.5rem; letter-spacing: 0.06em; color: var(--muted); margin-top: -14px; text-transform: uppercase; }
+html[lang='ar'] .form__pulse-score small { letter-spacing: 0; font-size: 0.62rem; }
+.form__pulse-title { min-width: 0; }
+.form__pulse-kicker { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--lime); }
+html[lang='ar'] .form__pulse-kicker { letter-spacing: 0; font-size: 0.85rem; }
+.form__pulse-title b { display: block; font-size: 1.05rem; line-height: 1.3; margin-top: 2px; }
+.form__pulse-title p { margin: 2px 0 0; color: var(--muted); font-size: 0.85rem; line-height: 1.4; }
+.form__pulse-x { align-self: start; font-size: 1.4rem; line-height: 1; color: var(--muted); padding: 2px 6px; border-radius: 8px; }
+.form__pulse-x:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+.form__pulse-row { display: grid; gap: 6px; }
+.form__pulse-row > span { font-size: 0.74rem; color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; }
+html[lang='ar'] .form__pulse-row > span { letter-spacing: 0; font-size: 0.85rem; }
+.form__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.form__chips span { padding: 6px 11px; border-radius: 999px; font-size: 0.8rem; line-height: 1.3; background: rgba(255, 92, 122, 0.12); color: #ffb3c1; }
+.form__chips--ok span { background: rgba(139, 61, 255, 0.2); color: #dccbff; }
+.form__pulse-note { margin: 0; font-size: 0.8rem; color: var(--muted); }
+@media (max-width: 600px) { .form__pulse-head { grid-template-columns: auto 1fr auto; gap: 10px; } .form__pulse-score { width: 62px; height: 62px; } .form__pulse-score b { font-size: 1.6rem; } }

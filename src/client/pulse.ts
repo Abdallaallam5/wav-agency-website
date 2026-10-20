@@ -49,6 +49,12 @@ export function initPulse(root: HTMLElement) {
     dotsEl.innerHTML = questions.map(() => '<span></span>').join('');
   }
   load();
+  // The finished report (null until the visitor reaches the end). The contact form mirrors it.
+  let lastReport: Report | null = null;
+  const publish = (r: Report | null) => {
+    lastReport = r;
+    document.dispatchEvent(new CustomEvent('wav:report', { detail: r }));
+  };
   const makeReport = () =>
     buildReport({ lang: getLang(), answers: [...picks].map(([questionId, answerId]) => ({ questionId, answerId })) });
 
@@ -255,6 +261,7 @@ export function initPulse(root: HTMLElement) {
     }
     if (target.closest('[data-restart]')) {
       picks.clear();
+      if (lastReport) publish(null);
       go({ kind: 'question', i: 0 });
       return;
     }
@@ -264,12 +271,15 @@ export function initPulse(root: HTMLElement) {
   });
 
   async function showReport() {
-    await go({ kind: 'report', report: makeReport() });
+    const report = makeReport();
+    await go({ kind: 'report', report });
+    publish(report);
   }
 
   onLangChange(() => {
     load();
-    if (view.kind === 'report') view = { kind: 'report', report: { ...makeReport(), planId: view.report.planId } };
+    if (lastReport) publish({ ...makeReport(), planId: lastReport.planId });
+    if (view.kind === 'report') view = { kind: 'report', report: lastReport! };
     card.innerHTML = htmlFor(view);
     updateProgress();
     if (view.kind === 'report') animateScore(view.report.score);

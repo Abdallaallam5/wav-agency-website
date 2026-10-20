@@ -32,6 +32,14 @@ const contactSchema = z.object({
   service: z.string().trim().max(60).optional(),
   message: z.string().trim().max(2000).optional(),
   planId: z.string().trim().max(20).optional(),
+  pulse: z
+    .object({
+      score: z.number().int().min(0).max(100),
+      level: z.string().trim().max(40),
+      findings: z.array(z.string().trim().max(200)).max(10),
+      services: z.array(z.string().trim().max(80)).max(5),
+    })
+    .optional(),
   lang: langSchema.optional(),
   website: z.string().max(0).optional(), // honeypot
 });

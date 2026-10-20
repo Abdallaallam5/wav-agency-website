@@ -57,7 +57,7 @@ public/              index.html, css/styles.css, assets (images taken from the c
 
 ## Before going live
 
-- **Leads / contact form**: each submission goes two ways: (1) `POST /api/contact` (validated, saved to `data/leads.json` locally, printed to the function logs on Vercel) and (2) an email to `wavagency.eg@gmail.com` through FormSubmit (`src/client/leadEmail.ts`). **One-time step:** the first submission makes FormSubmit email an "Activate Form" link to that address. Click it once, then every lead arrives in the inbox. To change the inbox, edit `LEADS_EMAIL` in `src/client/leadEmail.ts`.
+- **Leads / contact form**: each submission goes two ways: (1) `POST /api/contact` (validated, saved to `data/leads.json` locally, printed to the function logs on Vercel) and (2) an email to `wavagency.eg@gmail.com` through FormSubmit (`src/client/leadEmail.ts`). **One-time step:** the first submission makes FormSubmit email an "Activate Form" link to that address. Click it once, then every lead arrives in the inbox. If the visitor took the pulse check, the lead also carries the result (score, problems found, services we would start with): it shows as a card inside the form and as a `pulse_result` line in the email. To change the inbox, edit `LEADS_EMAIL` in `src/client/leadEmail.ts`.
 - **Contact details**: email and phone are in `public/index.html` (`.contact__info`).
 - **Work posters**: cropped from the 2026 company profile (`public/assets/work/posters/`). Replace them with the original files for sharper images.
 - **KPIs**: the numbers come from the company profile (slide 14). Keep them in sync with real results.

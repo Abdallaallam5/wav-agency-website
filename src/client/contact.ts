@@ -1,48 +1,97 @@
-import type { ContactRequest, Report } from '../shared/types';
+import type { ContactRequest, PulseSummary, Report } from '../shared/types';
 import { api } from './api';
-import { LEADS_EMAIL, sendLeadEmail } from './leadEmail';
 import { getLang, t } from './i18n';
+import { LEADS_EMAIL, sendLeadEmail } from './leadEmail';
 
 export function initContact(form: HTMLFormElement) {
   const status = form.querySelector<HTMLElement>('[data-form-status]')!;
-  const chip = form.querySelector<HTMLElement>('[data-plan-chip]')!;
-  const chipText = chip.querySelector<HTMLElement>('[data-plan-text]')!;
+  const card = form.querySelector<HTMLElement>('[data-pulse-result]')!;
   const planInput = form.elements.namedItem('planId') as HTMLInputElement;
+  const message = form.elements.namedItem('message') as HTMLTextAreaElement;
+  const select = form.elements.namedItem('service') as HTMLSelectElement;
   const submit = form.querySelector<HTMLButtonElement>('[type="submit"]')!;
+  const q = <T extends HTMLElement>(sel: string) => card.querySelector<T>(sel)!;
+
+  let report: Report | null = null;
+  // The meeting sentence we wrote ourselves, so we never overwrite something the visitor typed.
+  let autoMessage = '';
 
   const setStatus = (msg: string, kind: 'ok' | 'err' | '' = '') => {
     status.textContent = msg;
     status.className = `form__status${kind ? ` is-${kind}` : ''}`;
   };
 
-  // A finished pulse check can be attached to the enquiry.
-  document.addEventListener('wav:plan', (e) => {
-    const report = (e as CustomEvent<Report>).detail;
-    planInput.value = report.planId;
-    chipText.textContent = t('ui.planAttached', {
-      id: report.planId,
-      score: report.score,
-      services: report.priorities.map((p) => p.name).join(', '),
-    });
-    chip.hidden = false;
+  const chips = (host: HTMLElement, items: string[]) => {
+    host.replaceChildren(
+      ...items.map((text) => {
+        const span = document.createElement('span');
+        span.textContent = text;
+        return span;
+      }),
+    );
+  };
 
-    const message = form.elements.namedItem('message') as HTMLTextAreaElement;
-    if (!message.value.trim() && report.findings.length) {
-      message.value = t('ui.planMessage', { findings: report.findings.map((f) => f.headline).join(' · ') });
-    }
-    const select = form.elements.namedItem('service') as HTMLSelectElement;
-    const first = report.priorities[0]?.name;
+  function summary(r: Report): PulseSummary {
+    return {
+      score: r.score,
+      level: r.levelLabel,
+      findings: r.findings.map((f) => `${f.area}: ${f.headline}`),
+      services: r.priorities.map((p) => p.name),
+    };
+  }
+
+  /** Shows the pulse check result inside the form and prefills the meeting request. */
+  function attach(r: Report) {
+    report = r;
+    planInput.value = r.planId;
+
+    q('[data-pr-score]').textContent = String(r.score);
+    q('[data-pr-momentum]').textContent = t('ui.momentum');
+    q('[data-pr-kicker]').textContent = t('ui.pulseKicker');
+    q('[data-pr-level]').textContent = `${t('ui.level')}: ${r.levelLabel}`;
+    q('[data-pr-headline]').textContent = r.headline;
+    q('[data-pr-findings-label]').textContent = t('ui.pulseFindings');
+    q('[data-pr-services-label]').textContent = t('ui.pulseServices');
+    q('[data-pr-note]').textContent = t('ui.pulseNote');
+    q('[data-pr-remove]').setAttribute('aria-label', t('ui.pulseRemove'));
+    chips(q('[data-pr-findings]'), r.findings.length ? r.findings.map((f) => f.headline) : [t('ui.pulseNone')]);
+    chips(q('[data-pr-services]'), r.priorities.map((p) => p.name));
+    card.hidden = false;
+
+    // Meeting request text: only when the box is empty or still holds our previous sentence.
+    const next = t('ui.meetingMessage');
+    if (!message.value.trim() || message.value === autoMessage) message.value = next;
+    autoMessage = next;
+
+    // Preselect the service we'd start with, unless the visitor already chose one.
+    const first = r.priorities[0]?.name;
     const match = Array.from(select.options).find((o) => o.textContent?.trim() === first);
-    if (match) select.value = match.value;
+    if (match && !select.value) select.value = match.value;
+  }
 
+  function detach() {
+    report = null;
+    planInput.value = '';
+    card.hidden = true;
+    if (message.value === autoMessage) message.value = '';
+    autoMessage = '';
+  }
+
+  // The pulse check finished (or its language changed, or it restarted).
+  document.addEventListener('wav:report', (e) => {
+    const r = (e as CustomEvent<Report | null>).detail;
+    if (r) attach(r);
+    else detach();
+  });
+
+  // "Book a meeting about this" button on the result screen.
+  document.addEventListener('wav:plan', (e) => {
+    attach((e as CustomEvent<Report>).detail);
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
     window.setTimeout(() => (form.elements.namedItem('name') as HTMLInputElement).focus({ preventScroll: true }), 900);
   });
 
-  chip.querySelector('[data-plan-remove]')!.addEventListener('click', () => {
-    planInput.value = '';
-    chip.hidden = true;
-  });
+  q('[data-pr-remove]').addEventListener('click', detach);
 
   form.addEventListener('input', (e) => {
     (e.target as HTMLElement).closest('.field')?.classList.remove('is-invalid');
@@ -72,6 +121,7 @@ export function initContact(form: HTMLFormElement) {
       service: data.service || undefined,
       message: data.message?.trim() || undefined,
       planId: data.planId || undefined,
+      pulse: report ? summary(report) : undefined,
       website: data.website || undefined,
       lang: getLang(),
     };
@@ -81,22 +131,29 @@ export function initContact(form: HTMLFormElement) {
     try {
       // Two independent channels, so a lead is never lost:
       //  1. our own API (validation, spam check, logged on the server)
-      //  2. the email relay that delivers it to the WAV inbox
-      const [server, mail] = await Promise.allSettled([api.contact(payload), payload.website ? Promise.resolve() : sendLeadEmail(payload)]);
-
-      // The server rejected the fields themselves: show which one.
-      if (server.status === 'rejected') {
-        const field = (server.reason as { field?: string }).field;
+      //  2. the email relay that delivers it to the WAV inbox (best effort, runs in the background)
+      const mail = payload.website ? Promise.resolve() : sendLeadEmail(payload);
+      mail.catch(() => undefined);
+      try {
+        await api.contact(payload);
+      } catch (err) {
+        // The server rejected the fields themselves: show which one.
+        const field = (err as { field?: string }).field;
         if (field) {
           (form.elements.namedItem(field) as HTMLElement | null)?.closest('.field')?.classList.add('is-invalid');
           setStatus(t('form.invalid'), 'err');
           return;
         }
+        // Server unreachable: the email is our only copy, so wait for it.
+        try {
+          await mail;
+        } catch {
+          throw new Error(`Could not reach ${LEADS_EMAIL}`);
+        }
       }
-      if (server.status === 'rejected' && mail.status === 'rejected') throw new Error(`Could not reach ${LEADS_EMAIL}`);
 
       form.reset();
-      chip.hidden = true;
+      detach();
       setStatus(t('form.ok'), 'ok');
     } catch {
       setStatus(t('form.err'), 'err');

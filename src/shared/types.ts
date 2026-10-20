@@ -70,6 +70,15 @@ export interface Report {
   findings: { area: string; headline: string }[];
 }
 
+export interface PulseSummary {
+  score: number;
+  level: string;
+  /** "Area: headline" for each problem found. */
+  findings: string[];
+  /** Services we would start with. */
+  services: string[];
+}
+
 export interface ContactRequest {
   name: string;
   company?: string;
@@ -77,6 +86,8 @@ export interface ContactRequest {
   service?: string;
   message?: string;
   planId?: string;
+  /** Result of the brand pulse check, when the visitor did it. */
+  pulse?: PulseSummary;
   lang?: Lang;
   /** Honeypot — real visitors never fill this in. */
   website?: string;

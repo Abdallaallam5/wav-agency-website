@@ -512,11 +512,20 @@
         </div>
 
         <form class="form reveal" data-contact-form novalidate>
-          <div class="form__plan" data-plan-chip hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h4l3-7 4 14 3-7h6" /></svg>
-            <span data-plan-text></span>
-            <button type="button" data-plan-remove aria-label="Remove plan">×</button>
-          </div>
+          <section class="form__pulse" data-pulse-result hidden aria-live="polite">
+            <div class="form__pulse-head">
+              <div class="form__pulse-score"><b data-pr-score>0</b><small data-pr-momentum></small></div>
+              <div class="form__pulse-title">
+                <span class="form__pulse-kicker" data-pr-kicker></span>
+                <b data-pr-level></b>
+                <p data-pr-headline></p>
+              </div>
+              <button type="button" class="form__pulse-x" data-pr-remove>×</button>
+            </div>
+            <div class="form__pulse-row"><span data-pr-findings-label></span><div class="form__chips" data-pr-findings></div></div>
+            <div class="form__pulse-row"><span data-pr-services-label></span><div class="form__chips form__chips--ok" data-pr-services></div></div>
+            <p class="form__pulse-note" data-pr-note></p>
+          </section>
           <div class="form__row">
             <label class="field"><span data-i18n="form.name">Your name</span><input name="name" autocomplete="name" required minlength="2" maxlength="80" /></label>
             <label class="field"><span data-i18n="form.company">Brand / company</span><input name="company" autocomplete="organization" maxlength="120" /></label>
@@ -535,7 +544,7 @@
               <option data-i18n="services.s8">Business Experience Consulting</option>
             </select>
           </label>
-          <label class="field"><span data-i18n="form.message">Preferred day and time, or anything you'd like us to know (optional)</span><textarea name="message" rows="4" maxlength="2000"></textarea></label>
+          <label class="field"><span data-i18n="form.message">Want to book a meeting? Tell us the day and time that suit you (optional)</span><textarea name="message" rows="4" maxlength="2000" placeholder="e.g. Sunday after 3 pm, or anything you'd like us to know" data-i18n-placeholder="form.messagePh"></textarea></label>
           <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off" /></label>
           <input type="hidden" name="planId" />
           <button class="btn btn--block magnetic" type="submit"><span data-i18n="form.submit">Book a meeting</span></button>
