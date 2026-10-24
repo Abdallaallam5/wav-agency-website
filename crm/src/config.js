@@ -22,7 +22,9 @@ export const config = {
 };
 
 // Collections the frontend syncs, and which roles may touch money.
-export const COLLECTIONS = ['leads', 'clients', 'projects', 'tasks', 'content', 'invoices', 'activity'];
+export const COLLECTIONS = ['leads', 'clients', 'projects', 'tasks', 'content', 'invoices', 'activity', 'results', 'adfunds', 'proposals'];
+// Money collections: only admins and managers can read or change them.
+export const FINANCE_ONLY = ['invoices', 'adfunds'];
 export const FINANCE_ROLES = ['admin', 'manager'];
 export const ROLES = ['admin', 'manager', 'member'];
 
@@ -34,4 +36,4 @@ export const DEFAULT_SETTINGS = {
   invPrefix: 'WAV',
   website: 'www.wavagency.com',
 };
-export const SETTINGS_KEYS = ['agency', 'currency', 'vat', 'address', 'phone', 'email', 'taxId', 'invPrefix', 'website'];
+export const SETTINGS_KEYS = ['agency', 'currency', 'vat', 'address', 'phone', 'email', 'taxId', 'invPrefix', 'website', 'hourCost'];

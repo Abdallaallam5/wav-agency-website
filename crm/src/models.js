@@ -28,6 +28,7 @@ const userSchema = new Schema(
     title: { type: String, default: '' },
     color: { type: String, default: '#8b3dff' },
     active: { type: Boolean, default: true },
+    digest: { type: Boolean, default: true }, // daily email summary
     passwordHash: { type: String, select: false },
     salt: { type: String, select: false },
     tv: { type: Number, default: 0 }, // token version: bumping it signs the user out everywhere

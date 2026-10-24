@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { COLLECTIONS, DEFAULT_SETTINGS, FINANCE_ROLES, ROLES, SETTINGS_KEYS, config } from './config.js';
+import { COLLECTIONS, DEFAULT_SETTINGS, FINANCE_ONLY, FINANCE_ROLES, ROLES, SETTINGS_KEYS, config } from './config.js';
 import { Deleted, Records, User, getMeta, setMeta } from './models.js';
 import { authenticate, checkPassword, hashPassword, makeToken, publicUser, safeEqual, throttle } from './auth.js';
 import { fail } from './errors.js';
@@ -19,19 +19,23 @@ async function publicUsers() {
   return (await User.find().sort({ createdAt: 1 })).map(publicUser);
 }
 
-async function snapshot() {
+/** Collections this user may read: money collections only for admins and managers. */
+const readable = (user) => COLLECTIONS.filter((c) => !FINANCE_ONLY.includes(c) || FINANCE_ROLES.includes(user.role));
+
+async function snapshot(user) {
   const data = {};
-  await Promise.all(COLLECTIONS.map(async (c) => { data[c] = (await Records[c].find().lean()).map(toRecord); }));
+  await Promise.all(readable(user).map(async (c) => { data[c] = (await Records[c].find().lean()).map(toRecord); }));
   return { users: await publicUsers(), settings: await settings(), data, now: nowIso() };
 }
 
-async function changes({ since }) {
-  if (!since) return { ok: true, ...(await snapshot()) };
+async function changes({ since }, user) {
+  if (!since) return { ok: true, ...(await snapshot(user)) };
   // 10s overlap so a write that lands while we read is never missed (merging is idempotent).
   const from = new Date(new Date(since).getTime() - 10000).toISOString();
   const data = {};
-  await Promise.all(COLLECTIONS.map(async (c) => { data[c] = (await Records[c].find({ updatedAt: { $gt: from } }).lean()).map(toRecord); }));
-  const deleted = (await Deleted.find({ updatedAt: { $gt: from } }).lean()).map(({ id, coll, updatedAt }) => ({ id, collection: coll, updatedAt }));
+  const cols = readable(user);
+  await Promise.all(cols.map(async (c) => { data[c] = (await Records[c].find({ updatedAt: { $gt: from } }).lean()).map(toRecord); }));
+  const deleted = (await Deleted.find({ updatedAt: { $gt: from }, coll: { $in: cols } }).lean()).map(({ id, coll, updatedAt }) => ({ id, collection: coll, updatedAt }));
   return { ok: true, data, deleted, users: await publicUsers(), settings: await settings(), now: nowIso() };
 }
 
@@ -46,7 +50,7 @@ async function login({ email, password }) {
     fail('Wrong email or password', 'BADPASS');
   }
   await throttle.login.clear(key);
-  return { ok: true, token: makeToken(user), user: publicUser(user), ...(await snapshot()) };
+  return { ok: true, token: makeToken(user), user: publicUser(user), ...(await snapshot(user)) };
 }
 
 async function changePassword({ current, next }, user) {
@@ -76,7 +80,7 @@ function assertSafeKeys(v, depth = 0) {
 async function applyOp(op, user) {
   const col = op?.collection;
   if (!COLLECTIONS.includes(col)) fail('Unknown collection', 'BAD');
-  if (col === 'invoices' && !FINANCE_ROLES.includes(user.role)) fail('No access', 'FORBIDDEN');
+  if (FINANCE_ONLY.includes(col) && !FINANCE_ROLES.includes(user.role)) fail('No access', 'FORBIDDEN');
 
   if (op.op === 'upsert') {
     const { id, ...rest } = op.record || {};
@@ -132,6 +136,7 @@ async function saveUser({ user: input = {}, password = '' }, actor) {
   rec.email = email;
   rec.role = ROLES.includes(input.role) ? input.role : 'member';
   rec.active = input.active !== false;
+  if (input.digest !== undefined) rec.digest = input.digest !== false;
   if (rec._id === actor._id) { rec.role = 'admin'; rec.active = true; } // can't lock yourself out
 
   const pw = String(password || '');
@@ -208,8 +213,8 @@ export async function dispatch(req) {
 
   const user = await authenticate(req.token);
   switch (action) {
-    case 'bootstrap': return { ok: true, user: publicUser(user), ...(await snapshot()) };
-    case 'changes': return changes(req);
+    case 'bootstrap': return { ok: true, user: publicUser(user), ...(await snapshot(user)) };
+    case 'changes': return changes(req, user);
     case 'batch': return batch(req, user);
     case 'saveUser': return saveUser(req, user);
     case 'saveSettings': return saveSettings(req, user);

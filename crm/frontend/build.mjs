@@ -9,7 +9,7 @@ const read = (f) => readFileSync(join(root, f), 'utf8');
 
 const css = read('styles.css');
 const shell = read('shell.html');
-const js = ['config.js', 'i18n.js', 'core.js', 'metrics.js', 'ui.js', 'views.js'].map(read).join('\n');
+const js = ['config.js', 'i18n.js', 'core.js', 'metrics.js', 'ui.js', 'views.js', 'agency.js', 'boot.js'].map(read).join('\n');
 
 const html = `<!doctype html>
 <html lang="ar" dir="rtl">

@@ -12,8 +12,8 @@ let ROUTE = { view: 'dashboard', id: '' };
 /* ---------- Navigation ---------- */
 const NAV = [
   { g: 'nav.overview', items: [{ r: 'dashboard', i: 'dash' }] },
-  { g: 'nav.sales', items: [{ r: 'leads', i: 'leads', count: () => { const n = DB.leads.filter((l) => OPEN_STAGES.includes(l.stage) && l.followUp && l.followUp <= today()).length; return n ? { n, hot: true } : { n: openLeads().length }; } }, { r: 'clients', i: 'clients' }] },
-  { g: 'nav.delivery', items: [{ r: 'projects', i: 'projects' }, { r: 'tasks', i: 'tasks', count: () => { const mine = DB.tasks.filter((tk) => tk.assignee === me().id && tk.status !== 'done'); return mine.length ? { n: mine.length, hot: mine.some(isLateTask) } : null; } }, { r: 'calendar', i: 'cal' }] },
+  { g: 'nav.sales', items: [{ r: 'leads', i: 'leads', count: () => { const n = DB.leads.filter((l) => OPEN_STAGES.includes(l.stage) && l.followUp && l.followUp <= today()).length; return n ? { n, hot: true } : { n: openLeads().length }; } }, { r: 'clients', i: 'clients' }, { r: 'proposals', i: 'invoice' }] },
+  { g: 'nav.delivery', items: [{ r: 'projects', i: 'projects' }, { r: 'results', i: 'trend' }, { r: 'tasks', i: 'tasks', count: () => { const mine = DB.tasks.filter((tk) => tk.assignee === me().id && tk.status !== 'done'); return mine.length ? { n: mine.length, hot: mine.some(isLateTask) } : null; } }, { r: 'calendar', i: 'cal' }] },
   { g: 'nav.money', perm: () => can.finance(), items: [{ r: 'invoices', i: 'invoice', count: () => { const n = DB.invoices.filter((i) => invStatus(i) === 'overdue').length; return n ? { n, hot: true } : null; } }] },
   { g: 'nav.agency', items: [{ r: 'team', i: 'team' }, { r: 'reports', i: 'report', perm: () => can.finance() }, { r: 'settings', i: 'settings' }] },
 ];

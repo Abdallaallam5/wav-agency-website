@@ -49,7 +49,7 @@ export async function authenticate(token) {
 }
 
 export function publicUser(u) {
-  return { id: u._id, name: u.name, email: u.email, role: u.role || 'member', dept: u.dept || '', title: u.title || '', color: u.color || '#8b3dff', active: u.active !== false };
+  return { id: u._id, name: u.name, email: u.email, role: u.role || 'member', dept: u.dept || '', title: u.title || '', color: u.color || '#8b3dff', active: u.active !== false, digest: u.digest !== false };
 }
 
 /* ---------- throttling (counters stored in MongoDB, see models.js) ---------- */

@@ -93,6 +93,8 @@ const ENUM = {
   projectHealth: ['good', 'risk', 'late'],
   projectTemplate: ['social', 'campaign', 'branding', 'website'],
   deliverableStatus: ['draft', 'sent', 'changes', 'approved'],
+  adPlatform: ['meta', 'google', 'tiktok', 'snapchat', 'linkedin', 'other'],
+  proposalStatus: ['draft', 'sent', 'accepted', 'rejected'],
   taskStatus: ['todo', 'doing', 'review', 'done'],
   priority: ['low', 'medium', 'high', 'urgent'],
   platform: ['instagram', 'facebook', 'tiktok', 'linkedin', 'snapchat', 'youtube', 'x'],
@@ -112,6 +114,8 @@ const COLORS = {
   projectStatus: { brief: '#a69fbd', progress: '#8b3dff', review: '#ffb547', delivered: '#c8ff3d', hold: '#ff5c7a' },
   projectHealth: { good: '#c8ff3d', risk: '#ffb547', late: '#ff5c7a' },
   deliverableStatus: { draft: '#a69fbd', sent: '#5b8cff', changes: '#ffb547', approved: '#c8ff3d' },
+  adPlatform: { meta: '#4c8dff', google: '#ffb547', tiktok: '#25f4ee', snapchat: '#fffc00', linkedin: '#2d8cff', other: '#a69fbd' },
+  proposalStatus: { draft: '#a69fbd', sent: '#5b8cff', accepted: '#c8ff3d', rejected: '#ff5c7a' },
   taskStatus: { todo: '#a69fbd', doing: '#5b8cff', review: '#ffb547', done: '#c8ff3d' },
   priority: { low: '#6d6683', medium: '#5b8cff', high: '#ffb547', urgent: '#ff5c7a' },
   platform: { instagram: '#e1306c', facebook: '#4c8dff', tiktok: '#25f4ee', linkedin: '#2d8cff', snapchat: '#fffc00', youtube: '#ff3b3b', x: '#e8e8e8' },
@@ -125,9 +129,9 @@ const label = (en, v) => (v ? t(`${en}.${v}`) : '—');
 const pill = (en, v, extra = '') => (v ? `<span class="pill ${extra}" style="--c:${(COLORS[en] || {})[v] || 'var(--muted)'}"><i></i>${esc(label(en, v))}</span>` : '');
 
 /* ---------- Data ---------- */
-const COLS = ['leads', 'clients', 'projects', 'tasks', 'content', 'invoices', 'activity'];
-const PREFIX = { leads: 'L', clients: 'C', projects: 'P', tasks: 'T', content: 'CT', invoices: 'INV', activity: 'A', users: 'U' };
-const DEFAULT_SETTINGS = { agency: 'WAV Marketing Agency', currency: 'EGP', vat: 0, address: 'Egypt', phone: '', email: '', taxId: '', invPrefix: 'WAV', website: 'www.wavagency.com' };
+const COLS = ['leads', 'clients', 'projects', 'tasks', 'content', 'invoices', 'activity', 'results', 'adfunds', 'proposals'];
+const PREFIX = { leads: 'L', clients: 'C', projects: 'P', tasks: 'T', content: 'CT', invoices: 'INV', activity: 'A', users: 'U', results: 'R', adfunds: 'AF', proposals: 'PR' };
+const DEFAULT_SETTINGS = { agency: 'WAV Marketing Agency', currency: 'EGP', vat: 0, address: 'Egypt', phone: '', email: '', taxId: '', invPrefix: 'WAV', website: 'www.wavagency.com', hourCost: 0 };
 const DB = { users: [], settings: { ...DEFAULT_SETTINGS } };
 COLS.forEach((c) => (DB[c] = []));
 
@@ -139,6 +143,7 @@ const projectById = (id) => DB.projects.find((p) => p.id === id);
 const isCloud = () => SESSION?.mode === 'cloud';
 const can = {
   finance: () => ['admin', 'manager'].includes(me().role),
+  portal: () => ['admin', 'manager'].includes(me().role),
   remove: () => ['admin', 'manager'].includes(me().role),
   team: () => me().role === 'admin',
   settings: () => me().role === 'admin',
@@ -154,7 +159,8 @@ function clientLogo(c, size = '') {
 }
 
 /* Normalise records coming back from the server (numbers may arrive as strings, arrays as JSON). */
-const NUM_FIELDS = ['value', 'retainer', 'budget', 'progress', 'discount', 'vat', 'pulseScore', 'total', 'qty', 'price'];
+const NUM_FIELDS = ['value', 'retainer', 'budget', 'progress', 'discount', 'vat', 'pulseScore', 'total', 'qty', 'price',
+  'spend', 'impressions', 'clicks', 'leadCount', 'salesCount', 'revenue', 'amount', 'hours', 'adBudget', 'targetLeads', 'targetCpl', 'hourCost'];
 const ARR_FIELDS = ['services', 'items', 'deliverables'];
 function normalize(rec) {
   if (!rec) return rec;
@@ -517,6 +523,7 @@ function seedDemo() {
   DB.users = users;
   DB.settings = { ...DEFAULT_SETTINGS, vat: 14 };
   Object.assign(DB, { leads, clients, projects, tasks, content, invoices, activity });
+  Object.assign(DB, seedAgencyExtras(T, clients));
   Store.persist();
 }
 function projectById2(id, list) { return list.find((p) => p.id === id); }

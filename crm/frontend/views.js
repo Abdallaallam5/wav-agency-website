@@ -16,7 +16,8 @@ const SCHEMA = {
   clients: [
     { k: 'name', req: true }, { k: 'industry', type: 'enum', e: 'industry' }, { k: 'contact' }, { k: 'phone', type: 'tel' },
     { k: 'email', type: 'email' }, { k: 'website' }, { k: 'status', type: 'enum', e: 'clientStatus', req: true }, { k: 'manager', type: 'user' },
-    { k: 'retainer', type: 'number' }, { k: 'since', type: 'date' }, { k: 'services', type: 'multi', e: 'service' },
+    { k: 'retainer', type: 'number' }, { k: 'since', type: 'date' }, { k: 'adBudget', type: 'number' }, { k: 'targetLeads', type: 'number' },
+    { k: 'targetCpl', type: 'number' }, { k: 'services', type: 'multi', e: 'service' },
     { k: 'color', type: 'color', full: true }, { k: 'notes', type: 'textarea' },
   ],
   projects: [
@@ -27,7 +28,7 @@ const SCHEMA = {
   tasks: [
     { k: 'title', req: true, full: true }, { k: 'projectId', type: 'project', label: 'f.project' }, { k: 'clientId', type: 'client', label: 'f.client' },
     { k: 'assignee', type: 'user' }, { k: 'status', type: 'enum', e: 'taskStatus', req: true }, { k: 'priority', type: 'enum', e: 'priority', req: true },
-    { k: 'due', type: 'date' }, { k: 'notes', type: 'textarea' },
+    { k: 'due', type: 'date' }, { k: 'hours', type: 'number' }, { k: 'notes', type: 'textarea' },
   ],
   content: [
     { k: 'title', req: true, full: true }, { k: 'clientId', type: 'client', label: 'f.client', req: true }, { k: 'projectId', type: 'project', label: 'f.project' }, { k: 'platform', type: 'enum', e: 'platform', req: true },
@@ -35,12 +36,13 @@ const SCHEMA = {
     { k: 'status', type: 'enum', e: 'contentStatus', req: true }, { k: 'assignee', type: 'user' },
     { k: 'caption', type: 'textarea' }, { k: 'link', type: 'url', full: true },
   ],
+  adfunds: [{ k: 'clientId', type: 'client', label: 'f.client', req: true }, { k: 'date', type: 'date', req: true }, { k: 'amount', type: 'number', req: true }, { k: 'note', full: true }],
   users: [
     { k: 'name', req: true }, { k: 'email', type: 'email', req: true }, { k: 'title', label: 'f.jobTitle' }, { k: 'dept', type: 'enum', e: 'dept' },
-    { k: 'role', type: 'enum', e: 'role', req: true }, { k: 'active', type: 'bool' }, { k: 'color', type: 'color', full: true },
+    { k: 'role', type: 'enum', e: 'role', req: true }, { k: 'active', type: 'bool' }, { k: 'digest', type: 'bool' }, { k: 'color', type: 'color', full: true },
   ],
 };
-const ENT_KEY = { leads: 'lead', clients: 'client', projects: 'project', tasks: 'task', content: 'content', invoices: 'invoice', users: 'member' };
+const ENT_KEY = { leads: 'lead', clients: 'client', projects: 'project', tasks: 'task', content: 'content', invoices: 'invoice', users: 'member', adfunds: 'adfund' };
 
 function newDefaults(col) {
   const T = today();
@@ -65,7 +67,7 @@ function editRecord(col, id, defaults = {}) {
   const key = ENT_KEY[col];
   openModal({
     title: t((existing ? 'edit.' : 'new.') + key),
-    body: `<form id="recForm" novalidate>${col === 'projects' && !existing ? templatePickerHTML() : ''}${formHTML(SCHEMA[col], rec)}</form>`,
+    body: `<form id="recForm" novalidate>${col === 'content' && existing ? contentClientNoteHTML(existing) : ''}${col === 'projects' && !existing ? templatePickerHTML() : ''}${formHTML(SCHEMA[col], rec)}</form>`,
     foot: `${existing && can.remove() ? `<button class="btn btn--danger btn--sm" data-act="deleteRecord" data-col="${col}" data-id="${esc(id)}">${icon('trash')}${t('act.delete')}</button><span class="spacer"></span>` : ''}
       <button class="btn btn--ghost" data-act="closeModal">${t('act.cancel')}</button>
       <button class="btn" data-primary data-act="saveRecord" data-col="${col}" data-id="${esc(id || '')}">${icon('check')}${t('act.save')}</button>`,
@@ -103,7 +105,8 @@ ACT.saveRecord = async (el) => {
   }
   const rec = { ...(existing || {}), ...data };
   let log = null;
-  if (!existing) log = { type: 'create', text: 'created', extra: { name: data.name || data.title } };
+  if (!existing && col !== 'adfunds') log = { type: 'create', text: 'created', extra: { name: data.name || data.title } };
+  if (col === 'content' && data.status === 'approval' && prev.status !== 'approval') { rec.clientApproval = ''; rec.clientNote = ''; }
   if (col === 'leads' && !existing) { if (data.stage === 'won') rec.wonAt = today(); if (data.stage === 'lost') rec.lostAt = today(); }
   if (col === 'tasks' && prev.status !== 'done' && data.status === 'done') { rec.doneAt = today(); if (existing) log = { type: 'done', text: 'done', extra: { name: data.title } }; }
   if (col === 'tasks' && data.status !== 'done') rec.doneAt = '';
@@ -130,7 +133,7 @@ ACT.deleteRecord = async (el) => {
 };
 
 function openEntity(kind, id) {
-  const map = { lead: openLead, client: openClient, project: openProject, invoice: openInvoice, task: (x) => editRecord('tasks', x), content: (x) => editRecord('content', x) };
+  const map = { proposal: openProposal, lead: openLead, client: openClient, project: openProject, invoice: openInvoice, task: (x) => editRecord('tasks', x), content: (x) => editRecord('content', x) };
   map[kind]?.(id);
 }
 ACT.open = (el) => openEntity(el.dataset.kind, el.dataset.id);
@@ -177,6 +180,7 @@ function entityName(a) {
     case 'tasks': return Store.get('tasks', a.entityId)?.title || a.name;
     case 'content': { const c = Store.get('content', a.entityId); return clientById(c?.clientId)?.name || a.name; }
     case 'invoices': return Store.get('invoices', a.entityId)?.number || a.name;
+    case 'proposals': return Store.get('proposals', a.entityId)?.title || a.name;
     default: return a.name;
   }
 }
@@ -191,15 +195,18 @@ function activityText(a) {
     case 'paid': return t('inv.paidLog', { name });
     case 'convert': return t('leads.converted', { name });
     case 'delivered': return t('projects.delivered', { name });
-    case 'approved': return t('dlv.approvedLog', { name, item: `<b>${esc(a.item || '')}</b>` });
+    case 'approved': return t(a.by === 'client' ? 'portal.okLog' : 'dlv.approvedLog', { name, item: `<b>${esc(a.item || '')}</b>` });
+    case 'clientOk': return t('portal.okLog', { name, item: `<b>${esc(a.item || '')}</b>` });
+    case 'clientChanges': return t('portal.changesLog', { name, item: `<b>${esc(a.item || '')}</b>` });
+    case 'accepted': return t('prop.acceptedLog', { name });
     default: return name;
   }
 }
-const KIND_OF = { leads: 'lead', clients: 'client', projects: 'project', tasks: 'task', content: 'content', invoices: 'invoice' };
+const KIND_OF = { leads: 'lead', clients: 'client', projects: 'project', tasks: 'task', content: 'content', invoices: 'invoice', proposals: 'proposal' };
 function feedHTML(list, { notes = true } = {}) {
   if (!list.length) return emptyHTML();
   return `<ul class="feed">${list.map((a) => `<li>${avatar(userById(a.by), 'avatar--sm')}<div style="min-width:0;flex:1">
-    <p ${a.entity && a.entity !== 'invoices' || can.finance() ? `data-act="open" data-kind="${KIND_OF[a.entity] || ''}" data-id="${esc(a.entityId)}" style="cursor:pointer"` : ''}><b>${esc(userById(a.by)?.name || '—')}</b> ${activityText(a)}</p>
+    <p ${a.entity && a.entity !== 'invoices' || can.finance() ? `data-act="open" data-kind="${KIND_OF[a.entity] || ''}" data-id="${esc(a.entityId)}" style="cursor:pointer"` : ''}><b>${esc(userById(a.by)?.name || (a.by === 'client' ? t('portal.clientWho') : a.by === 'website' ? t('portal.websiteWho') : '—'))}</b> ${activityText(a)}</p>
     <small>${ago(a.at)}</small>${notes && a.type === 'note' ? `<div class="note">${esc(a.text)}</div>` : ''}</div></li>`).join('')}</ul>`;
 }
 
@@ -432,7 +439,7 @@ function openLead(id) {
     <div class="drawer__body">
       <div class="stepper">${ENUM.stage.map((s, i) => `<button style="--c:${COLORS.stage[s]}" class="${s === l.stage ? 'is-on' : i < idx && l.stage !== 'lost' ? 'is-past' : ''}" data-act="leadStage" data-id="${l.id}" data-stage="${s}">${label('stage', s)}</button>`).join('')}</div>
       <div class="quick">${quickContact(l).replace(/^<div class="quick">|<\/div>$/g, '')}
-        ${client ? `<button data-act="open" data-kind="client" data-id="${client.id}">${icon('clients')}${t('leads.openClient')}</button>` : `<button data-act="convertLead" data-id="${l.id}">${icon('convert')}${t('act.convert')}</button>`}</div>
+        ${client ? `<button data-act="open" data-kind="client" data-id="${client.id}">${icon('clients')}${t('leads.openClient')}</button>` : `<button data-act="convertLead" data-id="${l.id}">${icon('convert')}${t('act.convert')}</button>`}<button data-act="newProposal" data-lead="${l.id}">${icon('invoice')}${t('prop.new')}</button></div>
       ${l.pulseScore ? `<div class="banner" style="margin:0">${icon('pulse')}<span>${t('leads.fromPulse')} — <b>${t('f.pulse')}: ${l.pulseScore}</b>${l.planId ? ` · ${esc(l.planId)}` : ''}</span></div>` : ''}
       <div class="sect"><h4>${icon('user')}${t('ent.lead')}</h4>${kv([
         [t('f.phone'), l.phone ? `<span dir="ltr">${esc(l.phone)}</span>` : ''], [t('f.email'), esc(l.email)],
@@ -526,6 +533,7 @@ function openClient(id) {
     const paid = sum(invoices.filter((i) => i.status === 'paid'), invTotal);
     const tabs = [['projects', t('clients.tab.projects'), projects.length], ['content', t('clients.tab.content'), content.length]];
     if (can.finance()) tabs.push(['invoices', t('clients.tab.invoices'), invoices.length]);
+    CLIENT_EXTRA_TABS.forEach((x) => { if (!x.perm || x.perm()) tabs.push([x.k, x.label(), x.count(c)]); });
     tabs.push(['activity', t('clients.tab.activity'), acts.length]);
     const tab = tabState.tab;
     let tabBody = '';
@@ -533,6 +541,8 @@ function openClient(id) {
     if (tab === 'content') tabBody = `<div class="quick" style="margin:12px 0"><button data-act="newRecord" data-col="content" data-defaults='${JSON.stringify({ clientId: id })}'>${icon('plus')}${t('new.content')}</button></div>` + (content.length ? `<ul class="list">${content.slice(0, 30).map((x) => `<li class="is-click" data-act="open" data-kind="content" data-id="${x.id}"><span class="plat" style="--c:${COLORS.platform[x.platform]}">${PLAT_ABBR[x.platform]}</span><div class="list__main"><b>${esc(x.title)}</b><small>${fmtDate(x.date)} · ${label('format', x.format)}</small></div>${pill('contentStatus', x.status)}</li>`).join('')}</ul>` : emptyHTML());
     if (tab === 'invoices') tabBody = `<div class="quick" style="margin:12px 0"><button data-act="newRecord" data-col="invoices" data-defaults='${JSON.stringify({ clientId: id })}'>${icon('plus')}${t('new.invoice')}</button></div>` + (invoices.length ? `<ul class="list">${invoices.map((i) => `<li class="is-click" data-act="open" data-kind="invoice" data-id="${i.id}"><span class="list__icon" style="--c:${COLORS.invoiceStatus[invStatus(i)]}">${icon('invoice')}</span><div class="list__main"><b>${esc(i.number)}</b><small>${fmtDate(i.issue)}</small></div><b class="num">${money(invTotal(i))}</b>${pill('invoiceStatus', invStatus(i))}</li>`).join('')}</ul>` : emptyHTML());
     if (tab === 'activity') tabBody = `<div style="margin-top:12px">${feedHTML(acts.slice(0, 30))}</div>`;
+    const extraTab = CLIENT_EXTRA_TABS.find((x) => x.k === tab && (!x.perm || x.perm()));
+    if (extraTab) tabBody = extraTab.render(c);
     return `${drawerHead(`${t('ent.client')} · ${label('industry', c.industry)}`, `<span style="display:flex;align-items:center;gap:12px">${clientLogo(c, 'avatar--lg')}${esc(c.name)}</span>`, `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${pill('clientStatus', c.status)}${(c.services || []).map((s) => `<span class="tag" style="color:${COLORS.service[s]}">${esc(label('service', s))}</span>`).join('')}</div>`)}
       <div class="drawer__body">
         ${quickContact(c)}
@@ -890,7 +900,7 @@ VIEWS.calendar = {
         return `<div class="cal__day ${out ? 'is-out' : ''} ${d === T ? 'is-today' : ''}" data-zone="${d}">
           <span class="cal__n">${Number(d.slice(8))}</span>
           <button class="cal__add" data-act="newRecord" data-col="content" data-defaults='${JSON.stringify({ date: d, clientId: st.client || '' })}' aria-label="add">${icon('plus')}</button>
-          ${list.slice(0, 3).map((c) => `<div class="chip ${c.status === 'published' ? 'is-done' : ''}" style="--c:${COLORS.platform[c.platform]};--s:${COLORS.contentStatus[c.status]}" data-id="${c.id}" data-act="open" data-kind="content" title="${esc(c.title)} — ${esc(clientById(c.clientId)?.name || '')}"><span class="plat" style="--c:${COLORS.platform[c.platform]};width:18px;height:18px;font-size:.55rem">${PLAT_ABBR[c.platform]}</span><span>${esc(clientById(c.clientId)?.name || '')} · ${esc(c.title)}</span><i class="st"></i></div>`).join('')}
+          ${list.slice(0, 3).map((c) => `<div class="chip ${c.status === 'published' ? 'is-done' : ''}" style="--c:${COLORS.platform[c.platform]};--s:${COLORS.contentStatus[c.status]}" data-id="${c.id}" data-act="open" data-kind="content" title="${esc(c.title)} — ${esc(clientById(c.clientId)?.name || '')}"><span class="plat" style="--c:${COLORS.platform[c.platform]};width:18px;height:18px;font-size:.55rem">${PLAT_ABBR[c.platform]}</span><span>${esc(clientById(c.clientId)?.name || '')} · ${esc(c.title)}</span>${approvalMark(c)}<i class="st"></i></div>`).join('')}
           ${list.length > 3 ? `<button class="cal__more" data-act="calDay" data-date="${d}">${t('cal.more', { n: list.length - 3 })}</button>` : ''}
         </div>`;
       }).join('')}</div>
@@ -1228,6 +1238,7 @@ VIEWS.reports = {
       <section class="card mt" style="padding:0;overflow:hidden"><div class="card__head" style="padding:20px 20px 0"><h3>${icon('team')}${t('rep.team')}</h3></div>
         <div class="table-wrap table-cards" style="border:0;border-radius:0"><table class="table"><thead><tr><th>${t('nav.team')}</th><th>${t('rep.leads')}</th><th>${t('rep.won')}</th><th>${t('rep.value')}</th><th>${t('rep.tasks')}</th><th>${t('rep.posts')}</th></tr></thead>
         <tbody>${team.map((x) => `<tr style="cursor:default"><td><div class="who">${avatar(x.u, 'avatar--sm')}<div><b>${esc(x.u.name)}</b><small>${esc(label('dept', x.u.dept))}</small></div></div></td><td data-label="${t('rep.leads')}" class="num">${x.leads}</td><td data-label="${t('rep.won')}" class="num">${x.won}</td><td data-label="${t('rep.value')}" class="num">${money(x.value)}</td><td data-label="${t('rep.tasks')}" class="num">${x.tasks}</td><td data-label="${t('rep.posts')}" class="num">${x.posts}</td></tr>`).join('')}</tbody></table></div></section>
+      ${reportsExtraHTML(range)}
       <section class="card mt"><div class="card__head"><h3>${icon('download')}${t('rep.exports')}</h3></div><div class="quick">
         ${['leads', 'clients', 'projects', 'tasks', 'content', 'invoices'].map((c) => `<button data-act="exportCol" data-col="${c}">${icon('download')}${t('nav.' + (c === 'content' ? 'calendar' : c))}</button>`).join('')}</div></section>`;
   },
@@ -1269,6 +1280,7 @@ VIEWS.settings = {
         <form id="setForm" class="form-grid">
           ${[['agency', 'set.agency'], ['website', 'f.website'], ['phone', 'set.phone'], ['email', 'set.email'], ['address', 'set.address'], ['taxId', 'set.taxId'], ['invPrefix', 'set.invPrefix']].map(([k, l]) => `<label class="field"><span>${t(l)}</span><input name="${k}" value="${esc(S[k] || '')}" ${dis} /></label>`).join('')}
           <label class="field"><span>${t('set.vat')}</span><input type="number" min="0" max="100" name="vat" value="${esc(S.vat || 0)}" ${dis} /></label>
+          <label class="field"><span>${t('set.hourCost')}</span><input type="number" min="0" step="any" name="hourCost" value="${esc(S.hourCost || 0)}" ${dis} /></label>
           <label class="field"><span>${t('set.currency')}</span><select name="currency" ${dis}>${optList(Object.keys(CURRENCY), (c) => c, S.currency)}</select></label>
           <label class="field"><span>${t('set.language')}</span><select data-act-change="lang">${optList(['ar', 'en'], (l) => (l === 'ar' ? 'العربية' : 'English'), LANG)}</select></label>
         </form>
@@ -1455,17 +1467,3 @@ async function logout(expired = false) {
 }
 ACT.logout = () => logout();
 function onAuthExpired() { if (SESSION) logout(true); }
-
-/* ==========================================================================
-   BOOT
-   ========================================================================== */
-(function boot() {
-  if (SESSION && API_URL && !isCloud()) SESSION = null; // a live URL is built in — no demo sessions
-  if (SESSION && isCloud() && (!Sync.url() || !SESSION.token)) SESSION = null;
-  if (SESSION) {
-    if (!Store.load()) { if (isCloud()) SESSION = null; else seedDemo(); }
-    if (SESSION && !userById(SESSION.userId)) SESSION = null;
-  }
-  setTimeout(() => $('#boot').classList.add('is-done'), 350);
-  if (SESSION) startApp(); else renderLogin();
-})();
