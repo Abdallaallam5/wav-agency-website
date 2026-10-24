@@ -30,7 +30,7 @@ const SCHEMA = {
     { k: 'due', type: 'date' }, { k: 'notes', type: 'textarea' },
   ],
   content: [
-    { k: 'title', req: true, full: true }, { k: 'clientId', type: 'client', label: 'f.client', req: true }, { k: 'platform', type: 'enum', e: 'platform', req: true },
+    { k: 'title', req: true, full: true }, { k: 'clientId', type: 'client', label: 'f.client', req: true }, { k: 'projectId', type: 'project', label: 'f.project' }, { k: 'platform', type: 'enum', e: 'platform', req: true },
     { k: 'format', type: 'enum', e: 'format', req: true }, { k: 'date', type: 'date', req: true }, { k: 'time', type: 'time' },
     { k: 'status', type: 'enum', e: 'contentStatus', req: true }, { k: 'assignee', type: 'user' },
     { k: 'caption', type: 'textarea' }, { k: 'link', type: 'url', full: true },
@@ -65,7 +65,7 @@ function editRecord(col, id, defaults = {}) {
   const key = ENT_KEY[col];
   openModal({
     title: t((existing ? 'edit.' : 'new.') + key),
-    body: `<form id="recForm" novalidate>${formHTML(SCHEMA[col], rec)}</form>`,
+    body: `<form id="recForm" novalidate>${col === 'projects' && !existing ? templatePickerHTML() : ''}${formHTML(SCHEMA[col], rec)}</form>`,
     foot: `${existing && can.remove() ? `<button class="btn btn--danger btn--sm" data-act="deleteRecord" data-col="${col}" data-id="${esc(id)}">${icon('trash')}${t('act.delete')}</button><span class="spacer"></span>` : ''}
       <button class="btn btn--ghost" data-act="closeModal">${t('act.cancel')}</button>
       <button class="btn" data-primary data-act="saveRecord" data-col="${col}" data-id="${esc(id || '')}">${icon('check')}${t('act.save')}</button>`,
@@ -73,6 +73,17 @@ function editRecord(col, id, defaults = {}) {
       $('#recForm', m).addEventListener('submit', (e) => { e.preventDefault(); $('[data-primary]', m).click(); });
       const proj = $('[name="projectId"]', m);
       if (proj) proj.addEventListener('change', () => { const p = projectById(proj.value); if (p) $('[name="clientId"]', m).value = p.clientId; });
+      const tpl = $('[name="template"]', m);
+      if (tpl) tpl.addEventListener('change', () => {
+        const def = PROJECT_TEMPLATES[tpl.value];
+        $('[data-tpl-hint]', m).textContent = def ? t('tpl.hint', { n: def.tasks.length, d: def.deliverables.length, days: def.days }) : '';
+        if (!def) return;
+        const start = $('[name="start"]', m).value || today();
+        $('[name="due"]', m).value = addDays(start, def.days);
+        $('[name="service"]', m).value = def.service;
+        const name = $('[name="name"]', m);
+        if (!name.value.trim()) name.value = label('projectTemplate', tpl.value);
+      });
     },
   });
 }
@@ -80,6 +91,7 @@ ACT.saveRecord = async (el) => {
   const col = el.dataset.col, id = el.dataset.id;
   const data = readForm($('#recForm'), SCHEMA[col]);
   if (!data) return toast(t('msg.required'), { err: true });
+  const template = col === 'projects' && !id ? $('#recForm [name="template"]')?.value || '' : '';
   const existing = id ? Store.get(col, id) : null;
   const prev = existing ? { ...existing } : {};
   closeModal();
@@ -97,8 +109,10 @@ ACT.saveRecord = async (el) => {
   if (col === 'tasks' && data.status !== 'done') rec.doneAt = '';
   if (col === 'content' && prev.status !== 'published' && data.status === 'published') log = { type: 'publish', text: 'published', extra: { name: clientById(data.clientId)?.name } };
   if (col === 'projects' && prev.status !== 'delivered' && data.status === 'delivered' && existing) log = { type: 'delivered', text: 'delivered', extra: { name: data.name } };
+  if (template && PROJECT_TEMPLATES[template]) { rec.template = template; rec.deliverables = tplDeliverables(template); }
   const saved = Store.save(col, rec, { log: log ? { ...log, extra: log.extra } : null });
-  toast(t('msg.saved'));
+  const added = template ? applyTemplateTasks(saved, template) : 0;
+  toast(added ? t('tpl.applied', { n: added }) : t('msg.saved'));
   if (!existing && col === 'leads') openLead(saved.id);
   if (!existing && col === 'clients') openClient(saved.id);
   if (!existing && col === 'projects') openProject(saved.id);
@@ -177,6 +191,7 @@ function activityText(a) {
     case 'paid': return t('inv.paidLog', { name });
     case 'convert': return t('leads.converted', { name });
     case 'delivered': return t('projects.delivered', { name });
+    case 'approved': return t('dlv.approvedLog', { name, item: `<b>${esc(a.item || '')}</b>` });
     default: return name;
   }
 }
@@ -514,7 +529,7 @@ function openClient(id) {
     tabs.push(['activity', t('clients.tab.activity'), acts.length]);
     const tab = tabState.tab;
     let tabBody = '';
-    if (tab === 'projects') tabBody = `<div class="quick" style="margin:12px 0"><button data-act="newRecord" data-col="projects" data-defaults='${JSON.stringify({ clientId: id })}'>${icon('plus')}${t('new.project')}</button></div>` + (projects.length ? `<ul class="list">${projects.map((p) => `<li class="is-click" data-act="open" data-kind="project" data-id="${p.id}"><span class="list__icon" style="--c:${COLORS.projectStatus[p.status]}">${icon('projects')}</span><div class="list__main"><b>${esc(p.name)}</b><small>${label('service', p.service)} · ${pct(projectProgress(p))}</small></div>${pill('projectStatus', p.status)}</li>`).join('')}</ul>` : emptyHTML());
+    if (tab === 'projects') tabBody = `<div class="quick" style="margin:12px 0"><button data-act="newRecord" data-col="projects" data-defaults='${JSON.stringify({ clientId: id })}'>${icon('plus')}${t('new.project')}</button></div>` + (projects.length ? `<ul class="list">${projects.map((p) => `<li class="is-click" data-act="open" data-kind="project" data-id="${p.id}"><span class="list__icon" style="--c:${COLORS.projectStatus[p.status]}">${icon('projects')}</span><div class="list__main"><b>${esc(p.name)}</b><small>${label('service', p.service)} · ${pct(projectProgress(p))}</small></div>${healthDot(projectHealth(p))}${pill('projectStatus', p.status)}</li>`).join('')}</ul>` : emptyHTML());
     if (tab === 'content') tabBody = `<div class="quick" style="margin:12px 0"><button data-act="newRecord" data-col="content" data-defaults='${JSON.stringify({ clientId: id })}'>${icon('plus')}${t('new.content')}</button></div>` + (content.length ? `<ul class="list">${content.slice(0, 30).map((x) => `<li class="is-click" data-act="open" data-kind="content" data-id="${x.id}"><span class="plat" style="--c:${COLORS.platform[x.platform]}">${PLAT_ABBR[x.platform]}</span><div class="list__main"><b>${esc(x.title)}</b><small>${fmtDate(x.date)} · ${label('format', x.format)}</small></div>${pill('contentStatus', x.status)}</li>`).join('')}</ul>` : emptyHTML());
     if (tab === 'invoices') tabBody = `<div class="quick" style="margin:12px 0"><button data-act="newRecord" data-col="invoices" data-defaults='${JSON.stringify({ clientId: id })}'>${icon('plus')}${t('new.invoice')}</button></div>` + (invoices.length ? `<ul class="list">${invoices.map((i) => `<li class="is-click" data-act="open" data-kind="invoice" data-id="${i.id}"><span class="list__icon" style="--c:${COLORS.invoiceStatus[invStatus(i)]}">${icon('invoice')}</span><div class="list__main"><b>${esc(i.number)}</b><small>${fmtDate(i.issue)}</small></div><b class="num">${money(invTotal(i))}</b>${pill('invoiceStatus', invStatus(i))}</li>`).join('')}</ul>` : emptyHTML());
     if (tab === 'activity') tabBody = `<div style="margin-top:12px">${feedHTML(acts.slice(0, 30))}</div>`;
@@ -534,37 +549,145 @@ function openClient(id) {
 /* ==========================================================================
    PROJECTS
    ========================================================================== */
+/* ---------- Project templates: tasks as [day offset from start, EN, AR, priority], deliverables as [EN, AR] ---------- */
+const PROJECT_TEMPLATES = {
+  social: {
+    service: 'content', days: 30,
+    tasks: [[2, 'Monthly content plan', 'خطة المحتوى للشهر', 'high'], [4, 'Client approval on the plan', 'موافقة العميل على الخطة', 'high'],
+      [8, 'Design posts — first half', 'تصميم بوستات النص الأول', 'medium'], [8, 'Write captions — first half', 'كتابة كابشنز النص الأول', 'medium'],
+      [10, 'Schedule posts — weeks 1–2', 'جدولة بوستات أول أسبوعين', 'medium'], [18, 'Design posts — second half', 'تصميم بوستات النص التاني', 'medium'],
+      [18, 'Write captions — second half', 'كتابة كابشنز النص التاني', 'medium'], [20, 'Schedule posts — weeks 3–4', 'جدولة بوستات آخر أسبوعين', 'medium'],
+      [30, 'Monthly performance report', 'تقرير الأداء الشهري', 'high']],
+    deliverables: [['Content plan', 'خطة المحتوى'], ['Monthly report', 'التقرير الشهري']],
+  },
+  campaign: {
+    service: 'media', days: 21,
+    tasks: [[1, 'Campaign brief & goals', 'بريف الحملة والأهداف', 'high'], [3, 'Audience & budget plan', 'خطة الجمهور والميزانية', 'high'],
+      [6, 'Ad creatives', 'تصميمات الإعلانات', 'medium'], [6, 'Ad copy (AR + EN)', 'نصوص الإعلانات (عربي + إنجليزي)', 'medium'],
+      [8, 'Client approval on creatives', 'موافقة العميل على التصميمات', 'high'], [8, 'Set up tracking & pixels', 'ضبط التتبع والبكسل', 'medium'],
+      [10, 'Launch the campaign', 'إطلاق الحملة', 'urgent'], [15, 'Mid-campaign optimisation', 'تحسين الحملة في النص', 'medium'],
+      [21, 'Final results report', 'تقرير النتايج النهائي', 'high']],
+    deliverables: [['Media plan', 'خطة الميديا'], ['Ad creatives', 'تصميمات الإعلانات'], ['Results report', 'تقرير النتايج']],
+  },
+  branding: {
+    service: 'strategy', days: 30,
+    tasks: [[3, 'Discovery session with the client', 'جلسة فهم البراند مع العميل', 'high'], [7, 'Moodboard & direction', 'المودبورد والاتجاه', 'medium'],
+      [12, 'Logo concepts', 'أفكار اللوجو', 'high'], [15, 'Client feedback round', 'جولة ملاحظات العميل', 'high'],
+      [20, 'Refine the chosen logo', 'تطوير اللوجو المختار', 'medium'], [27, 'Brand guidelines', 'دليل الهوية', 'medium'],
+      [30, 'Hand over the final files', 'تسليم الملفات النهائية', 'high']],
+    deliverables: [['Moodboard', 'المودبورد'], ['Logo concepts', 'أفكار اللوجو'], ['Brand guidelines', 'دليل الهوية'], ['Final files', 'الملفات النهائية']],
+  },
+  website: {
+    service: 'tech', days: 45,
+    tasks: [[4, 'Sitemap & content list', 'خريطة الموقع والمحتوى المطلوب', 'high'], [10, 'Wireframes', 'الوايرفريمز', 'medium'],
+      [18, 'UI design', 'تصميم الواجهات', 'medium'], [21, 'Client approval on the design', 'موافقة العميل على التصميم', 'high'],
+      [35, 'Development', 'البرمجة', 'high'], [38, 'Add the content', 'إدخال المحتوى', 'medium'],
+      [42, 'Test on phone & desktop', 'اختبار على الموبايل والكمبيوتر', 'high'], [45, 'Launch', 'الإطلاق', 'urgent']],
+    deliverables: [['Wireframes', 'الوايرفريمز'], ['UI design', 'تصميم الواجهات'], ['Live website', 'الموقع شغال']],
+  },
+};
+const tplPick = (en, ar) => (LANG === 'ar' ? ar : en);
+const tplDeliverables = (key) => (PROJECT_TEMPLATES[key]?.deliverables || []).map(([en, ar]) => ({ id: uid('D'), title: tplPick(en, ar), link: '', status: 'draft', at: '' }));
+function applyTemplateTasks(p, key) {
+  const tpl = PROJECT_TEMPLATES[key];
+  if (!tpl) return 0;
+  const start = p.start || today();
+  tpl.tasks.forEach(([off, en, ar, priority]) => {
+    let due = addDays(start, off);
+    if (p.due && due > p.due) due = p.due;
+    Store.save('tasks', { title: tplPick(en, ar), projectId: p.id, clientId: p.clientId, assignee: p.owner || me().id, status: 'todo', priority, due });
+  });
+  return tpl.tasks.length;
+}
+const templatePickerHTML = () => `<label class="field field--full tpl-pick"><span>${t('tpl.label')}</span><select name="template"><option value="">${t('tpl.none')}</option>${ENUM.projectTemplate.map((k) => `<option value="${k}">${esc(label('projectTemplate', k))}</option>`).join('')}</select><small class="dim" data-tpl-hint></small></label>`;
+
+/* ---------- Small project helpers used by several views ---------- */
+const healthPill = (h) => (h ? `<span class="pill" style="--c:${h.c}" title="${esc(h.reasons.join(' · '))}"><i></i>${esc(label('projectHealth', h.key))}</span>` : '');
+const healthDot = (h) => (h ? `<i class="hdot" style="--c:${h.c}" title="${esc(label('projectHealth', h.key) + (h.reasons.length ? ' — ' + h.reasons.join(' · ') : ''))}"></i>` : '');
+const safeUrl = (u) => { const s = String(u || '').trim(); if (!s) return ''; return /^https?:\/\//i.test(s) ? s : `https://${s.replace(/^\/+/, '')}`; };
+const waitingOnClient = (p) => deliverablesOf(p).some((d) => d.status === 'sent');
+
+function projectMatchesHealth(p, f) {
+  if (!f) return true;
+  if (f === 'active') return isOpenProject(p);
+  if (f === 'waiting') return isOpenProject(p) && waitingOnClient(p);
+  return projectHealth(p)?.key === f;
+}
+
+function projectSummaryHTML(all, st) {
+  const open = all.filter(isOpenProject);
+  const health = open.map(projectHealth);
+  const week = addDays(today(), 7);
+  const cards = [
+    ['active', 'projects', t('projects.sum.active'), open.length, t('projects.sum.activeMeta', { n: open.filter((p) => p.due && p.due >= today() && p.due <= week).length }), 'var(--violet-2)'],
+    ['risk', 'alert', t('projects.sum.risk'), health.filter((h) => h?.key === 'risk').length, t('projects.sum.riskMeta'), COLORS.projectHealth.risk],
+    ['late', 'clock', t('projects.sum.late'), health.filter((h) => h?.key === 'late').length, t('projects.sum.lateMeta'), COLORS.projectHealth.late],
+    ['waiting', 'flag', t('projects.sum.waiting'), open.filter(waitingOnClient).length, t('projects.sum.waitingMeta'), COLORS.deliverableStatus.sent],
+  ];
+  return `<div class="grid g-4 keep psum">${cards.map(([k, ic, l, v, m, c]) => `<button class="card kpi psum__card ${st.health === k ? 'is-on' : ''}" style="--c:${c}" data-act="set" data-set="projects.health" data-val="${st.health === k ? '' : k}"><span class="kpi__label">${icon(ic)}${l}</span><b class="kpi__value num">${v}</b><div class="kpi__meta">${m}</div></button>`).join('')}</div>`;
+}
+
+function workloadHTML() {
+  const rows = teamWorkload();
+  if (!rows.length) return `<div class="card">${emptyHTML()}</div>`;
+  const max = Math.max(1, ...rows.map((r) => r.load));
+  const avg = sum(rows, (r) => r.load) / rows.length;
+  return `<p class="dim wl-hint">${t('wl.hint')}</p><div class="grid g-3 wl">${rows.map((r) => {
+    const tagKey = r.load > avg * 1.4 && r.load >= 6 ? 'heavy' : r.load < avg * 0.6 ? 'free' : '';
+    const tagC = tagKey === 'heavy' ? COLORS.projectHealth.late : COLORS.projectHealth.good;
+    return `<article class="card wl__card">
+      <div class="wl__head">${avatar(r.u)}<div style="min-width:0;flex:1"><b>${esc(r.u.name)}</b><small class="dim">${esc(r.u.title || label('dept', r.u.dept))}</small></div>${tagKey ? `<span class="pill" style="--c:${tagC}"><i></i>${t('wl.' + tagKey)}</span>` : ''}</div>
+      <div class="wl__bar"><i style="width:${Math.round((r.load / max) * 100)}%"></i></div>
+      <div class="wl__nums">
+        <div><b class="num">${r.open}</b><small>${t('wl.open')}</small></div>
+        <div class="${r.late ? 'is-late' : ''}"><b class="num">${r.late}</b><small>${t('wl.late')}</small></div>
+        <div><b class="num">${r.week}</b><small>${t('wl.week')}</small></div>
+        <div><b class="num">${r.posts}</b><small>${t('wl.posts')}</small></div>
+      </div>
+      <div class="wl__projects"><small class="dim">${t('wl.projects')}</small>${r.projects.length ? r.projects.map((p) => `<button class="wl__proj" data-act="open" data-kind="project" data-id="${p.id}">${healthDot(projectHealth(p))}<span>${esc(p.name)}</span></button>`).join('') : `<span class="dim" style="font-size:.8rem">${t('wl.none')}</span>`}</div>
+    </article>`;
+  }).join('')}</div>`;
+}
+
 VIEWS.projects = {
   title: () => t('nav.projects'),
   render() {
-    const st = uiState('projects', { mode: 'board', q: '', client: '', sort: 'due', dir: 'asc' });
-    const list = DB.projects.filter((p) => match(st.q, p.name, clientById(p.clientId)?.name) && (!st.client || p.clientId === st.client));
+    const st = uiState('projects', { mode: 'board', q: '', client: '', health: '', sort: 'due', dir: 'asc' });
     const toolbar = `<div class="toolbar">${searchBox('projects.q', t('projects.search'))}
       ${selectFilter('projects.client', DB.clients.map((c) => c.id), (id) => clientById(id)?.name, t('projects.allClients'))}<span class="grow"></span>
-      ${seg('projects.mode', st.mode, [['board', t('leads.board'), 'board'], ['table', t('leads.table'), 'list']])}
+      ${seg('projects.mode', st.mode, [['board', t('leads.board'), 'board'], ['table', t('leads.table'), 'list'], ['team', t('projects.workload'), 'team']])}
       <button class="btn btn--sm" data-act="newRecord" data-col="projects">${icon('plus')}${t('new.project')}</button></div>`;
+    if (st.mode === 'team') return toolbar + workloadHTML();
+    const summary = projectSummaryHTML(DB.projects, st);
+    const list = DB.projects.filter((p) => match(st.q, p.name, clientById(p.clientId)?.name) && (!st.client || p.clientId === st.client) && projectMatchesHealth(p, st.health));
     if (st.mode === 'table') {
-      if (!list.length) return toolbar + `<div class="card">${emptyHTML()}</div>`;
-      const rows = sortRows(list, st, { progress: projectProgress, client: (p) => clientById(p.clientId)?.name || '' });
-      return toolbar + `<div class="table-wrap table-cards"><table class="table"><thead><tr>${sortable('projects', 'name', t('f.name'), st)}${sortable('projects', 'client', t('f.client'), st)}<th>${t('f.service')}</th>${sortable('projects', 'status', t('f.status'), st)}${sortable('projects', 'progress', t('f.progress'), st)}<th>${t('f.owner')}</th>${sortable('projects', 'due', t('f.due'), st)}</tr></thead>
-        <tbody>${rows.map((p) => `<tr data-act="open" data-kind="project" data-id="${p.id}"><td><b>${esc(p.name)}</b></td><td data-label="${t('f.client')}">${esc(clientById(p.clientId)?.name || '—')}</td><td data-label="${t('f.service')}">${esc(label('service', p.service))}</td><td data-label="${t('f.status')}">${pill('projectStatus', p.status)}</td><td data-label="${t('f.progress')}" class="num">${pct(projectProgress(p))}</td><td data-label="${t('f.owner')}">${esc(userById(p.owner)?.name || '—')}</td><td data-label="${t('f.due')}">${dueTag(p.due, p.status === 'delivered')}</td></tr>`).join('')}</tbody></table></div>`;
+      if (!list.length) return toolbar + summary + `<div class="card mt">${emptyHTML()}</div>`;
+      const hRank = (p) => ({ late: 0, risk: 1, good: 2 }[projectHealth(p)?.key] ?? 3);
+      const rows = sortRows(list, st, { progress: projectProgress, client: (p) => clientById(p.clientId)?.name || '', health: hRank });
+      return toolbar + summary + `<div class="table-wrap table-cards mt"><table class="table"><thead><tr>${sortable('projects', 'name', t('f.name'), st)}${sortable('projects', 'client', t('f.client'), st)}${sortable('projects', 'health', t('projects.health'), st)}${sortable('projects', 'status', t('f.status'), st)}${sortable('projects', 'progress', t('f.progress'), st)}<th>${t('dlv.title')}</th><th>${t('f.owner')}</th>${sortable('projects', 'due', t('f.due'), st)}</tr></thead>
+        <tbody>${rows.map((p) => { const dl = deliverablesOf(p); return `<tr data-act="open" data-kind="project" data-id="${p.id}"><td><b>${esc(p.name)}</b></td><td data-label="${t('f.client')}">${esc(clientById(p.clientId)?.name || '—')}</td><td data-label="${t('projects.health')}">${healthPill(projectHealth(p)) || '—'}</td><td data-label="${t('f.status')}">${pill('projectStatus', p.status)}</td><td data-label="${t('f.progress')}" class="num">${pct(projectProgress(p))}</td><td data-label="${t('dlv.title')}" class="num">${dl.length ? `${dl.filter((d) => d.status === 'approved').length}/${dl.length}` : '—'}</td><td data-label="${t('f.owner')}">${esc(userById(p.owner)?.name || '—')}</td><td data-label="${t('f.due')}">${dueTag(p.due, p.status === 'delivered')}</td></tr>`; }).join('')}</tbody></table></div>`;
     }
-    return toolbar + `<div class="board" data-keep-scroll="projects">${ENUM.projectStatus.map((s) => {
+    return toolbar + summary + `<div class="board mt" data-keep-scroll="projects">${ENUM.projectStatus.map((s) => {
       const ps = list.filter((p) => p.status === s).sort((a, b) => ((a.due || '9') < (b.due || '9') ? -1 : 1));
       return `<section class="col" style="--c:${COLORS.projectStatus[s]}" data-zone="${s}"><div class="col__head"><div class="col__title"><i></i>${label('projectStatus', s)}<span class="n">${ps.length}</span></div>${waveSVG(COLORS.projectStatus[s])}</div>
         <div class="col__body">${ps.map((p) => {
           const c = clientById(p.clientId);
-          const tasks = DB.tasks.filter((tk) => tk.projectId === p.id);
-          return `<article class="kcard" data-id="${p.id}" data-act="open" data-kind="project">
+          const tasks = projectTasks(p);
+          const h = projectHealth(p);
+          const dl = deliverablesOf(p);
+          const waiting = dl.filter((d) => d.status === 'sent').length;
+          return `<article class="kcard ${h ? 'kcard--h' : ''}" ${h ? `style="--hc:${h.c}"` : ''} data-id="${p.id}" data-act="open" data-kind="project">
             <div class="kcard__top"><div style="min-width:0"><div class="kcard__name">${esc(p.name)}</div><div class="kcard__sub">${esc(c?.name || '')}</div></div>${clientLogo(c, 'avatar--sm')}</div>
-            <div class="kcard__meta">${p.service ? `<span class="tag" style="color:${COLORS.service[p.service]}">${esc(label('service', p.service))}</span>` : ''}${tasks.length ? `<span class="tag">${icon('tasks')}${tasks.filter((x) => x.status === 'done').length}/${tasks.length}</span>` : ''}</div>
+            <div class="kcard__meta">${h && h.key !== 'good' ? healthPill(h) : ''}${p.service ? `<span class="tag" style="color:${COLORS.service[p.service]}">${esc(label('service', p.service))}</span>` : ''}${tasks.length ? `<span class="tag">${icon('tasks')}${tasks.filter((x) => x.status === 'done').length}/${tasks.length}</span>` : ''}${dl.length ? `<span class="tag" ${waiting ? `style="color:${COLORS.deliverableStatus.sent}"` : ''} title="${t('dlv.title')}">${icon('flag')}${dl.filter((d) => d.status === 'approved').length}/${dl.length}</span>` : ''}</div>
+            ${h && h.reasons.length ? `<div class="kcard__why" style="color:${h.c}">${esc(h.reasons[0])}</div>` : ''}
             <div class="progress" style="--v:${projectProgress(p).toFixed(3)}"><i></i></div>
             <div class="kcard__foot">${avatar(userById(p.owner), 'avatar--sm')}${dueTag(p.due, p.status === 'delivered')}</div></article>`;
         }).join('')}</div>
-        <button class="col__add" data-act="newRecord" data-col="projects" data-defaults='${JSON.stringify({ status: s })}'>${icon('plus')}${t('act.add')}</button></section>`;
+        <button class="col__add" data-act="newRecord" data-col="projects" data-defaults="${esc(JSON.stringify({ status: s }))}">${icon('plus')}${t('act.add')}</button></section>`;
     }).join('')}</div>`;
   },
   mount(root) {
+    if (!$('.board', root)) return;
     enableDnD(root, {
       item: '.kcard[data-id]', zone: '.col[data-zone]', onDrop: (id, status) => {
         const p = projectById(id);
@@ -576,22 +699,70 @@ VIEWS.projects = {
   },
   openId: (id) => openProject(id),
 };
+
+function projectContentHTML(p) {
+  const posts = DB.content.filter((x) => x.projectId === p.id).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const add = `<button class="btn btn--ghost btn--sm" data-act="newRecord" data-col="content" data-defaults="${esc(JSON.stringify({ clientId: p.clientId, projectId: p.id }))}">${icon('plus')}${t('new.content')}</button>`;
+  if (!posts.length) return `<div class="sect"><h4>${icon('cal')}${t('pc.title')}</h4><p class="dim" style="margin:0 0 10px;font-size:.85rem">${t('pc.empty')}</p>${add}</div>`;
+  const pub = posts.filter((x) => x.status === 'published').length;
+  const sch = posts.filter((x) => x.status === 'scheduled').length;
+  const late = posts.filter(isLateContent).length;
+  const next = posts.filter((x) => x.status !== 'published' && x.date >= today()).slice(0, 4);
+  return `<div class="sect"><h4>${icon('cal')}${t('pc.title')} · ${posts.length}</h4>
+    <div class="mini-stats"><div><b class="num">${pub}</b><small>${t('pc.published')}</small></div><div><b class="num">${sch}</b><small>${t('pc.scheduled')}</small></div><div><b class="num">${posts.length - pub - sch}</b><small>${t('pc.inWork')}</small></div><div class="${late ? 'is-late' : ''}"><b class="num">${late}</b><small>${t('pc.late')}</small></div></div>
+    ${next.length ? `<ul class="list" style="margin-top:8px">${next.map((x) => `<li class="is-click" data-act="open" data-kind="content" data-id="${x.id}"><span class="list__icon" style="--c:${COLORS.platform[x.platform]}">${esc(PLAT_ABBR[x.platform] || '')}</span><div class="list__main"><b>${esc(x.title)}</b><small>${esc(label('format', x.format))} · ${fmtDate(x.date)}</small></div>${pill('contentStatus', x.status)}</li>`).join('')}</ul>` : ''}
+    <div style="margin-top:10px">${add}</div></div>`;
+}
+
+function projectMoneyHTML(p) {
+  if (!can.finance()) return '';
+  const m = projectMoney(p);
+  const inv = DB.invoices.filter((i) => i.projectId === p.id).sort((a, b) => (a.issue < b.issue ? 1 : -1));
+  const over = m.budget && m.invoiced > m.budget ? m.invoiced - m.budget : 0;
+  const newInv = esc(JSON.stringify({ clientId: p.clientId, projectId: p.id, items: [{ desc: p.name, qty: 1, price: m.left }] }));
+  return `<div class="sect"><h4>${icon('money')}${t('pm.title')}</h4>
+    <div class="mini-stats"><div><b class="num">${m.budget ? money(m.budget, true) : '—'}</b><small>${t('f.budget')}</small></div><div><b class="num">${money(m.invoiced, true)}</b><small>${t('pm.invoiced')}</small></div><div><b class="num lime">${money(m.paid, true)}</b><small>${t('pm.paid')}</small></div><div><b class="num">${m.budget ? money(m.left, true) : '—'}</b><small>${t('pm.left')}</small></div></div>
+    ${m.budget ? `<div class="money-bar" title="${t('pm.invoiced')} / ${t('f.budget')}"><i class="paid" style="width:${Math.min(100, (m.paid / m.budget) * 100).toFixed(1)}%"></i><i class="unpaid" style="width:${Math.min(100, (m.unpaid / m.budget) * 100).toFixed(1)}%"></i></div>` : `<p class="dim" style="margin:8px 0 0;font-size:.82rem">${t('pm.noBudget')}</p>`}
+    ${over ? `<p style="margin:8px 0 0;font-size:.82rem;color:${COLORS.projectHealth.late}">${icon('alert')} ${t('pm.over', { v: money(over) })}</p>` : ''}
+    ${inv.length ? `<ul class="list" style="margin-top:8px">${inv.map((i) => `<li class="is-click" data-act="open" data-kind="invoice" data-id="${i.id}"><span class="list__icon" style="--c:${COLORS.invoiceStatus[invStatus(i)]}">${icon('invoice')}</span><div class="list__main"><b class="num">${esc(i.number)}</b><small>${fmtDate(i.issue)}</small></div><b class="num">${money(invTotal(i), true)}</b>${pill('invoiceStatus', invStatus(i))}</li>`).join('')}</ul>` : ''}
+    <div style="margin-top:10px"><button class="btn btn--ghost btn--sm" data-act="newRecord" data-col="invoices" data-defaults="${newInv}">${icon('plus')}${t('new.invoice')}</button></div></div>`;
+}
+
+function projectDeliverablesHTML(p) {
+  const dl = deliverablesOf(p);
+  const opts = (cur) => ENUM.deliverableStatus.map((s) => `<option value="${s}" ${s === cur ? 'selected' : ''}>${esc(label('deliverableStatus', s))}</option>`).join('');
+  return `<div class="sect"><h4>${icon('flag')}${t('dlv.title')}${dl.length ? ` · ${dl.filter((d) => d.status === 'approved').length}/${dl.length}` : ''}</h4>
+    ${dl.length ? `<ul class="list dlv">${dl.map((d) => {
+      const url = safeUrl(d.link);
+      return `<li><span class="list__icon" style="--c:${COLORS.deliverableStatus[d.status] || 'var(--muted)'}">${icon(d.status === 'approved' ? 'check' : 'flag')}</span>
+        <div class="list__main"><b>${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(d.title)} ${icon('link')}</a>` : esc(d.title)}</b><small>${esc(label('deliverableStatus', d.status))}${d.at ? ' · ' + fmtDate(d.at) : ''}</small></div>
+        <select class="input dlv__status" data-dlv="${esc(d.id)}" aria-label="${t('f.status')}" style="--c:${COLORS.deliverableStatus[d.status]}">${opts(d.status)}</select>
+        <button class="icon-btn icon-btn--sm" data-act="rmDeliverable" data-project="${p.id}" data-id="${esc(d.id)}" aria-label="${t('act.delete')}">${icon('close')}</button></li>`;
+    }).join('')}</ul>` : `<p class="dim" style="margin:0 0 10px;font-size:.85rem">${t('dlv.empty')}</p>`}
+    <div class="dlv__add"><input class="input" id="dlvTitle" placeholder="${t('dlv.add')}" maxlength="120" /><input class="input" id="dlvLink" placeholder="${t('dlv.link')}" dir="ltr" maxlength="500" /><button class="btn btn--sm" data-act="addDeliverable" data-project="${p.id}">${icon('plus')}</button></div></div>`;
+}
+
 function openProject(id) {
   openDrawer(() => {
     const p = projectById(id);
     if (!p) return null;
     const c = clientById(p.clientId);
-    const tasks = DB.tasks.filter((tk) => tk.projectId === id).sort((a, b) => (a.status === 'done') - (b.status === 'done') || ((a.due || '9') < (b.due || '9') ? -1 : 1));
+    const tasks = projectTasks(p).sort((a, b) => (a.status === 'done') - (b.status === 'done') || ((a.due || '9') < (b.due || '9') ? -1 : 1));
     const prog = projectProgress(p);
-    return `${drawerHead(`${t('ent.project')} · ${esc(c?.name || '')}`, esc(p.name), `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${pill('projectStatus', p.status)}${p.service ? `<span class="tag" style="color:${COLORS.service[p.service]}">${esc(label('service', p.service))}</span>` : ''}</div>`)}
+    const h = projectHealth(p);
+    return `${drawerHead(`${t('ent.project')} · ${esc(c?.name || '')}`, esc(p.name), `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${pill('projectStatus', p.status)}${healthPill(h)}${p.service ? `<span class="tag" style="color:${COLORS.service[p.service]}">${esc(label('service', p.service))}</span>` : ''}</div>`)}
       <div class="drawer__body">
-        <div class="card" style="padding:16px"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span class="muted">${t('f.progress')}</span><b class="num lime">${pct(prog)}</b></div><div class="kcard"><div class="progress" style="--v:${prog.toFixed(3)};height:8px"><i></i></div></div></div>
+        <div class="card" style="padding:16px${h ? `;border-color:color-mix(in srgb, ${h.c} 40%, var(--line))` : ''}"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span class="muted">${t('f.progress')}</span><b class="num lime">${pct(prog)}</b></div><div class="kcard"><div class="progress" style="--v:${prog.toFixed(3)};height:8px"><i></i></div></div>
+          ${h ? `<ul class="why">${h.reasons.length ? h.reasons.map((r) => `<li style="--c:${h.c}">${icon('alert')}<span>${esc(r)}</span></li>`).join('') : `<li style="--c:${h.c}">${icon('check')}<span>${t('health.allGood')}</span></li>`}</ul>` : ''}</div>
         <div class="stepper">${ENUM.projectStatus.map((s) => `<button style="--c:${COLORS.projectStatus[s]}" class="${s === p.status ? 'is-on' : ''}" data-act="projectStatus" data-id="${p.id}" data-status="${s}">${label('projectStatus', s)}</button>`).join('')}</div>
-        <div class="sect">${kv([[t('f.client'), c ? `<a data-act="open" data-kind="client" data-id="${c.id}" style="cursor:pointer;color:var(--violet-2)">${esc(c.name)}</a>` : ''], [t('f.owner'), esc(userById(p.owner)?.name || '')], [t('f.start'), fmtDate(p.start)], [t('f.due'), p.due ? `${fmtDate(p.due)} · ${relDay(p.due)}` : ''], can.finance() ? [t('f.budget'), p.budget ? money(p.budget) : ''] : null])}</div>
-        ${p.notes ? `<div class="sect"><h4>${t('f.notes')}</h4><div class="card" style="padding:14px;white-space:pre-wrap">${esc(p.notes)}</div></div>` : ''}
+        <div class="sect">${kv([[t('f.client'), c ? `<a data-act="open" data-kind="client" data-id="${c.id}" style="cursor:pointer;color:var(--violet-2)">${esc(c.name)}</a>` : ''], [t('f.owner'), esc(userById(p.owner)?.name || '')], [t('f.start'), fmtDate(p.start)], [t('f.due'), p.due ? (Math.abs(daysBetween(today(), p.due)) < 7 || p.due < today() ? `${fmtDate(p.due)} · ${relDay(p.due)}` : fmtDate(p.due)) : '']])}</div>
+        ${projectDeliverablesHTML(p)}
         <div class="sect"><h4>${icon('tasks')}${t('projects.tasks')} · ${tasks.filter((x) => x.status === 'done').length}/${tasks.length}</h4>
           <input class="input" id="projTaskIn" placeholder="${t('projects.addTask')}" data-project="${p.id}" />
           <ul class="list checklist" style="margin-top:8px">${tasks.map((tk) => `<li><button class="tick ${tk.status === 'done' ? 'is-on' : ''}" data-act="toggleTask" data-id="${tk.id}" aria-label="done">${icon('check')}</button><div class="list__main" data-act="open" data-kind="task" data-id="${tk.id}" style="cursor:pointer"><b style="${tk.status === 'done' ? 'text-decoration:line-through;color:var(--dim)' : ''}">${esc(tk.title)}</b><small>${esc(userById(tk.assignee)?.name || '')}</small></div>${tk.status !== 'done' ? dueTag(tk.due) : ''}</li>`).join('')}</ul></div>
+        ${projectContentHTML(p)}
+        ${projectMoneyHTML(p)}
+        ${p.notes ? `<div class="sect"><h4>${t('f.notes')}</h4><div class="card" style="padding:14px;white-space:pre-wrap">${esc(p.notes)}</div></div>` : ''}
       </div>
       <div class="drawer__foot">${can.remove() ? `<button class="btn btn--danger btn--sm" data-act="deleteRecord" data-col="projects" data-id="${p.id}">${icon('trash')}</button><span class="spacer"></span>` : ''}
         <button class="btn btn--ghost btn--sm" data-act="editRecord" data-col="projects" data-id="${p.id}">${icon('edit')}${t('act.edit')}</button></div>`;
@@ -603,8 +774,35 @@ function openProject(id) {
       Store.save('tasks', { title: inp.value.trim(), projectId: p.id, clientId: p.clientId, assignee: p.owner || me().id, status: 'todo', priority: 'medium', due: addDays(today(), 3) });
       setTimeout(() => $('#projTaskIn')?.focus(), 30);
     });
+    $$('[data-dlv]', d).forEach((sel) => sel.addEventListener('change', () => setDeliverableStatus(id, sel.dataset.dlv, sel.value)));
+    ['#dlvTitle', '#dlvLink'].forEach((s) => $(s, d)?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('[data-act="addDeliverable"]', d)?.click(); } }));
   });
 }
+
+function setDeliverableStatus(projectId, dId, status) {
+  const p = projectById(projectId);
+  if (!p || !ENUM.deliverableStatus.includes(status)) return;
+  const list = deliverablesOf(p).map((d) => (d.id === dId ? { ...d, status, at: today() } : d));
+  const item = list.find((d) => d.id === dId);
+  const log = status === 'approved' && item ? { type: 'approved', text: 'approved', extra: { name: p.name, item: item.title } } : null;
+  Store.save('projects', { ...p, deliverables: list }, { log });
+  if (status === 'approved') burst();
+}
+ACT.addDeliverable = (el) => {
+  const p = projectById(el.dataset.project);
+  const title = $('#dlvTitle')?.value.trim();
+  if (!p || !title) return $('#dlvTitle')?.focus();
+  const link = $('#dlvLink')?.value.trim() || '';
+  Store.save('projects', { ...p, deliverables: [...deliverablesOf(p), { id: uid('D'), title: title.slice(0, 120), link: link.slice(0, 500), status: 'draft', at: today() }] });
+  setTimeout(() => $('#dlvTitle')?.focus(), 30);
+};
+ACT.rmDeliverable = (el) => {
+  const p = projectById(el.dataset.project);
+  if (!p) return;
+  const before = deliverablesOf(p);
+  Store.save('projects', { ...p, deliverables: before.filter((d) => d.id !== el.dataset.id) });
+  toast(t('msg.deleted'), { undo: () => { const cur = projectById(p.id); if (cur) Store.save('projects', { ...cur, deliverables: before }); } });
+};
 ACT.projectStatus = (el) => { const p = projectById(el.dataset.id); if (p && p.status !== el.dataset.status) { Store.save('projects', { ...p, status: el.dataset.status }, el.dataset.status === 'delivered' ? { log: { type: 'delivered', text: 'delivered', extra: { name: p.name } } } : {}); if (el.dataset.status === 'delivered') burst(); } };
 ACT.toggleTask = (el) => {
   const tk = Store.get('tasks', el.dataset.id);
@@ -806,7 +1004,7 @@ function openInvoice(id) {
       <div class="drawer__body">
         <div class="quick">${s === 'draft' ? `<button data-act="markSent" data-id="${i.id}">${icon('mail')}${t('act.send')}</button>` : ''}${s !== 'paid' && s !== 'cancelled' ? `<button data-act="markPaid" data-id="${i.id}">${icon('check')}${t('act.markPaid')}</button>` : ''}
           <button data-act="printInvoice" data-id="${i.id}">${icon('print')}${t('act.print')}</button><button data-act="duplicateInvoice" data-id="${i.id}">${icon('repeat')}${t('act.duplicate')}</button></div>
-        ${kv([[t('f.client'), c ? `<a data-act="open" data-kind="client" data-id="${c.id}" style="cursor:pointer;color:var(--violet-2)">${esc(c.name)}</a>` : ''], [t('f.issue'), fmtDate(i.issue)], [t('f.due'), `${fmtDate(i.due)}${['sent', 'overdue'].includes(s) ? ' · ' + relDay(i.due) : ''}`], [t('f.paidAt'), i.paidAt ? fmtDate(i.paidAt) : '']])}
+        ${kv([[t('f.client'), c ? `<a data-act="open" data-kind="client" data-id="${c.id}" style="cursor:pointer;color:var(--violet-2)">${esc(c.name)}</a>` : ''], i.projectId && projectById(i.projectId) ? [t('f.project'), `<a data-act="open" data-kind="project" data-id="${esc(i.projectId)}" style="cursor:pointer;color:var(--violet-2)">${esc(projectById(i.projectId).name)}</a>`] : null, [t('f.issue'), fmtDate(i.issue)], [t('f.due'), `${fmtDate(i.due)}${['sent', 'overdue'].includes(s) ? ' · ' + relDay(i.due) : ''}`], [t('f.paidAt'), i.paidAt ? fmtDate(i.paidAt) : '']])}
         <div class="sect"><h4>${t('f.items')}</h4><div class="table-wrap"><table class="table"><thead><tr><th>${t('f.desc')}</th><th>${t('f.qty')}</th><th>${t('f.price')}</th><th style="text-align:end">${t('f.total')}</th></tr></thead><tbody>
           ${(i.items || []).map((it) => `<tr style="cursor:default"><td style="white-space:normal">${esc(it.desc)}</td><td class="num">${it.qty}</td><td class="num">${money(it.price)}</td><td class="num" style="text-align:end">${money(it.qty * it.price)}</td></tr>`).join('')}</tbody></table></div>
           <div class="totals"><div><span>${t('f.subtotal')}</span><span class="num">${money(tot.subtotal)}</span></div>${tot.discount ? `<div><span>${t('f.discount')} (${i.discount}%)</span><span class="num">−${money(tot.discount)}</span></div>` : ''}${tot.vat ? `<div><span>${t('f.vat')} (${i.vat}%)</span><span class="num">${money(tot.vat)}</span></div>` : ''}<div class="grand"><span>${t('f.total')}</span><b class="num">${money(tot.total)}</b></div></div></div>
@@ -827,6 +1025,7 @@ function editInvoice(id, defaults = {}) {
     body: `<form id="invForm" novalidate><div class="form-grid">
         <label class="field" data-k="number"><span>${t('f.number')} <b>*</b></span><input name="number" value="${esc(inv.number)}" dir="ltr" /></label>
         <label class="field" data-k="clientId"><span>${t('f.client')} <b>*</b></span><select name="clientId">${clientOptions(inv.clientId, '')}</select></label>
+        <label class="field" data-k="projectId"><span>${t('f.project')}</span><select name="projectId">${projectOptions(inv.projectId || '')}</select></label>
         <label class="field"><span>${t('f.issue')}</span><input type="date" name="issue" value="${esc(inv.issue)}" /></label>
         <label class="field"><span>${t('f.due')}</span><input type="date" name="due" value="${esc(inv.due)}" /></label>
         <label class="field"><span>${t('f.status')}</span><select name="status">${optList(ENUM.invoiceStatus.filter((s) => s !== 'overdue'), (s) => label('invoiceStatus', s), inv.status)}</select></label>
@@ -847,6 +1046,8 @@ function editInvoice(id, defaults = {}) {
         $$('#itemRows .items__row').forEach((r, i) => { $('.total', r).textContent = money((items[i]?.qty || 0) * (items[i]?.price || 0)); });
         $('#invTotals').innerHTML = `<div><span>${t('f.subtotal')}</span><span class="num">${money(tot.subtotal)}</span></div>${tot.discount ? `<div><span>${t('f.discount')}</span><span class="num">−${money(tot.discount)}</span></div>` : ''}${tot.vat ? `<div><span>${t('f.vat')}</span><span class="num">${money(tot.vat)}</span></div>` : ''}<div class="grand"><span>${t('f.total')}</span><b class="num">${money(tot.total)}</b></div>`;
       };
+      const proj = $('[name="projectId"]', m);
+      proj.addEventListener('change', () => { const p = projectById(proj.value); if (p) $('[name="clientId"]', m).value = p.clientId; });
       $('#invForm', m).addEventListener('input', recalc);
       $('#invForm', m).addEventListener('submit', (e) => e.preventDefault());
       recalc();
@@ -868,7 +1069,7 @@ ACT.saveInvoice = (el) => {
   const id = el.dataset.id;
   const existing = id ? Store.get('invoices', id) : null;
   const status = val('status');
-  const rec = { ...(existing || {}), number: val('number'), clientId: val('clientId'), issue: val('issue'), due: val('due'), status, discount: Number(val('discount')) || 0, vat: Number(val('vat')) || 0, notes: val('notes'), items: readItems() };
+  const rec = { ...(existing || {}), number: val('number'), clientId: val('clientId'), projectId: val('projectId'), issue: val('issue'), due: val('due'), status, discount: Number(val('discount')) || 0, vat: Number(val('vat')) || 0, notes: val('notes'), items: readItems() };
   if (status === 'paid' && !rec.paidAt) rec.paidAt = today();
   if (status !== 'paid') rec.paidAt = '';
   closeModal();

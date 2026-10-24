@@ -90,6 +90,9 @@ const ENUM = {
   industry: ['fnb', 'fmcg', 'auto', 'corporate', 'org', 'education', 'health', 'retail', 'realestate', 'other'],
   clientStatus: ['active', 'onboarding', 'paused', 'ended'],
   projectStatus: ['brief', 'progress', 'review', 'delivered', 'hold'],
+  projectHealth: ['good', 'risk', 'late'],
+  projectTemplate: ['social', 'campaign', 'branding', 'website'],
+  deliverableStatus: ['draft', 'sent', 'changes', 'approved'],
   taskStatus: ['todo', 'doing', 'review', 'done'],
   priority: ['low', 'medium', 'high', 'urgent'],
   platform: ['instagram', 'facebook', 'tiktok', 'linkedin', 'snapchat', 'youtube', 'x'],
@@ -107,6 +110,8 @@ const COLORS = {
   service: { strategy: '#8b3dff', content: '#e07bff', media: '#5b8cff', tech: '#2bd4ff', digital: '#b06bff', growth: '#c8ff3d', print: '#ffb547', consulting: '#3ee6a8' },
   clientStatus: { active: '#c8ff3d', onboarding: '#2bd4ff', paused: '#ffb547', ended: '#6d6683' },
   projectStatus: { brief: '#a69fbd', progress: '#8b3dff', review: '#ffb547', delivered: '#c8ff3d', hold: '#ff5c7a' },
+  projectHealth: { good: '#c8ff3d', risk: '#ffb547', late: '#ff5c7a' },
+  deliverableStatus: { draft: '#a69fbd', sent: '#5b8cff', changes: '#ffb547', approved: '#c8ff3d' },
   taskStatus: { todo: '#a69fbd', doing: '#5b8cff', review: '#ffb547', done: '#c8ff3d' },
   priority: { low: '#6d6683', medium: '#5b8cff', high: '#ffb547', urgent: '#ff5c7a' },
   platform: { instagram: '#e1306c', facebook: '#4c8dff', tiktok: '#25f4ee', linkedin: '#2d8cff', snapchat: '#fffc00', youtube: '#ff3b3b', x: '#e8e8e8' },
@@ -150,7 +155,7 @@ function clientLogo(c, size = '') {
 
 /* Normalise records coming back from the server (numbers may arrive as strings, arrays as JSON). */
 const NUM_FIELDS = ['value', 'retainer', 'budget', 'progress', 'discount', 'vat', 'pulseScore', 'total', 'qty', 'price'];
-const ARR_FIELDS = ['services', 'items'];
+const ARR_FIELDS = ['services', 'items', 'deliverables'];
 function normalize(rec) {
   if (!rec) return rec;
   NUM_FIELDS.forEach((k) => { if (rec[k] !== undefined && rec[k] !== '') rec[k] = Number(rec[k]) || 0; });
@@ -426,6 +431,11 @@ function seedDemo() {
     owner: pick([U.mariam, U.nour, U.omar, U.youssef]), progress: status === 'delivered' ? 100 : Math.floor(rnd() * 70) + 10,
     notes: '', createdAt: ts(start), updatedAt: ts(-1),
   }));
+  const dl = (title, status, off, link = '') => ({ id: uid('D'), title, link, status, at: addDays(T, off) });
+  projects[0].deliverables = [dl('Content plan', 'approved', -15), dl('Hero video storyboard', 'sent', -2, 'https://drive.google.com/'), dl('Ramadan visuals pack', 'draft', -1)];
+  projects[2].deliverables = [dl('Moodboard', 'approved', -28), dl('Logo concepts', 'approved', -18), dl('Brand guidelines', 'changes', -3, 'https://www.figma.com/')];
+  projects[3].deliverables = [dl('Profile copy', 'sent', -4), dl('Brochure design', 'draft', -1)];
+  projects[4].deliverables = [dl('Sitemap', 'draft', -2)];
 
   const taskTitles = [
     ['Write 12 captions for next week', 'P-01', U.nour], ['Storyboard hero Ramadan video', 'P-01', U.youssef], ['Book studio + talent for shoot', 'P-01', U.mariam],
@@ -456,7 +466,7 @@ function seedDemo() {
       const status = d < 0 ? (rnd() < 0.9 ? 'published' : 'approval') : d < 3 ? pick(['scheduled', 'approval', 'design']) : pick(['idea', 'writing', 'design', 'approval', 'scheduled']);
       const clientId = pick(contentClients);
       content.push({
-        id: `CT-${content.length + 1}`, title: pick(contentIdeas), clientId, platform: pick(['instagram', 'instagram', 'facebook', 'tiktok', 'linkedin', 'snapchat']),
+        id: `CT-${content.length + 1}`, title: pick(contentIdeas), clientId, projectId: { 'C-01': 'P-01', 'C-08': 'P-07' }[clientId] || '', platform: pick(['instagram', 'instagram', 'facebook', 'tiktok', 'linkedin', 'snapchat']),
         format: pick(ENUM.format), date, time: pick(['12:00', '15:00', '19:00', '21:00']), status, assignee: pick([U.nour, U.youssef, U.nour]),
         caption: '', link: '', createdAt: ts(d - 7), updatedAt: ts(Math.min(d, -1)),
       });
@@ -482,9 +492,11 @@ function seedDemo() {
       mk(cid, -30 * m + 2, 'paid', [{ desc: t('inv.retainerFor', { month: fmtMonth(mKey, true) }), qty: 1, price: c.retainer }], { retainerMonth: mKey });
     });
   }
-  mk('C-02', -38, 'paid', [{ desc: 'Summer drinks launch — production', qty: 1, price: 60000 }]);
-  mk('C-05', -26, 'sent', [{ desc: 'Corporate profile — design & copy', qty: 1, price: 28000 }, { desc: 'Brochure print run (1000 pcs)', qty: 1000, price: 14 }]);
-  mk('C-04', -6, 'sent', [{ desc: 'Brand refresh — milestone 2', qty: 1, price: 42500 }]);
+  mk('C-02', -38, 'paid', [{ desc: 'Summer drinks launch — production', qty: 1, price: 60000 }], { projectId: 'P-06' });
+  mk('C-05', -26, 'sent', [{ desc: 'Corporate profile — design & copy', qty: 1, price: 28000 }, { desc: 'Brochure print run (1000 pcs)', qty: 1000, price: 14 }], { projectId: 'P-04' });
+  mk('C-04', -30, 'paid', [{ desc: 'Brand refresh — milestone 1', qty: 1, price: 30000 }], { projectId: 'P-03' });
+  mk('C-04', -6, 'sent', [{ desc: 'Brand refresh — milestone 2', qty: 1, price: 42500 }], { projectId: 'P-03' });
+  mk('C-01', -12, 'paid', [{ desc: 'Ramadan campaign — 50% upfront', qty: 1, price: 60000 }], { projectId: 'P-01' });
   mk('C-03', -3, 'draft', [{ desc: 'Ad spend management fee — extra markets', qty: 1, price: 18000 }]);
   mk('C-06', -45, 'sent', [{ desc: 'Volunteer season content package', qty: 1, price: 18000 }]);
 

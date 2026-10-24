@@ -31,6 +31,66 @@ function projectProgress(p) {
   return clamp((Number(p.progress) || 0) / 100, 0, 1);
 }
 
+const isOpenProject = (p) => p.status !== 'delivered' && p.status !== 'hold';
+const projectTasks = (p) => DB.tasks.filter((tk) => tk.projectId === p.id);
+const deliverablesOf = (p) => (Array.isArray(p.deliverables) ? p.deliverables : []);
+
+/**
+ * Is the project on track? Compares how much of the time has passed with how much of the work is done,
+ * and looks at overdue tasks and client feedback. Returns { key: good|risk|late, c, reasons[] }.
+ * Delivered / on-hold projects have no health (null).
+ */
+function projectHealth(p) {
+  if (!isOpenProject(p)) return null;
+  const T = today();
+  const prog = projectProgress(p);
+  const lateTasks = projectTasks(p).filter(isLateTask).length;
+  const changes = deliverablesOf(p).filter((d) => d.status === 'changes').length;
+  const reasons = [];
+  let level = 0; // 0 good, 1 risk, 2 late
+  const bump = (n, reason) => { level = Math.max(level, n); reasons.push(reason); };
+
+  if (p.due && p.due < T) bump(2, t('health.r.overdue', { n: daysBetween(p.due, T) }));
+  if (lateTasks) bump(lateTasks >= 3 ? 2 : 1, t('health.r.lateTasks', { n: lateTasks }));
+  if (p.start && p.due && p.due > p.start && p.due >= T) {
+    const elapsed = clamp(daysBetween(p.start, T) / daysBetween(p.start, p.due), 0, 1);
+    // Behind schedule is a warning, not "late": it only counts once a fifth of the time has passed.
+    const ltr = (s) => `⁦${s}⁩`; // keeps "60%" readable inside Arabic text
+    if (elapsed >= 0.2 && elapsed - prog > 0.25) bump(1, t('health.r.behind', { time: ltr(pct(elapsed)), done: ltr(pct(prog)) }));
+    const left = daysBetween(T, p.due);
+    if (left <= 3 && prog < 0.8) bump(1, t('health.r.dueSoon', { n: left }));
+  }
+  if (changes) bump(1, t('health.r.changes', { n: changes }));
+  const key = ENUM.projectHealth[level];
+  return { key, c: COLORS.projectHealth[key], reasons };
+}
+
+/** Budget vs what has been invoiced and paid for this project (cancelled invoices don't count). */
+function projectMoney(p) {
+  const inv = DB.invoices.filter((i) => i.projectId === p.id && i.status !== 'cancelled');
+  const invoiced = sum(inv, invTotal);
+  const paid = sum(inv.filter((i) => i.status === 'paid'), invTotal);
+  const budget = Number(p.budget) || 0;
+  return { budget, invoiced, paid, unpaid: invoiced - paid, left: Math.max(0, budget - invoiced), count: inv.length };
+}
+
+/** Open work per active teammate, busiest first. */
+function teamWorkload() {
+  const T = today(), week = addDays(T, 7);
+  return DB.users.filter((u) => u.active !== false).map((u) => {
+    const open = DB.tasks.filter((tk) => tk.assignee === u.id && tk.status !== 'done');
+    const projects = DB.projects.filter((p) => p.owner === u.id && isOpenProject(p));
+    const posts = DB.content.filter((c) => c.assignee === u.id && c.status !== 'published' && c.date >= T && c.date <= week);
+    return {
+      u, open: open.length, late: open.filter(isLateTask).length,
+      week: open.filter((tk) => tk.due && tk.due >= T && tk.due <= week).length,
+      urgent: open.filter((tk) => tk.priority === 'urgent' || tk.priority === 'high').length,
+      posts: posts.length, projects,
+      load: open.length + posts.length + projects.length * 2,
+    };
+  }).sort((a, b) => b.load - a.load);
+}
+
 function clientHealth(c) {
   const overdueInv = DB.invoices.filter((i) => i.clientId === c.id && invStatus(i) === 'overdue').length;
   const lateTasks = DB.tasks.filter((tk) => tk.clientId === c.id && isLateTask(tk)).length;
