@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "express",
-  "buildCommand": "npm run build:client"
+  "buildCommand": "npm run build",
+  "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }]
 }
