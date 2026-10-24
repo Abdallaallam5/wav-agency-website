@@ -238,5 +238,17 @@ export async function bootstrapData(log = console.log) {
     const password = config.adminPassword || randomUUID().replace(/-/g, '').slice(0, 14);
     await User.create({ _id: 'U-ADMIN', name: config.adminName, email: config.adminEmail, role: 'admin', dept: 'management', title: 'Admin', color: '#8b3dff', active: true, ...hashPassword(password), tv: 0, createdAt: nowIso(), updatedAt: nowIso() });
     log(`[crm] Admin created -> ${config.adminEmail}${config.adminPassword ? '' : `   temporary password: ${password}`}`);
+    return;
+  }
+
+  // ADMIN_EMAIL + ADMIN_PASSWORD also add that admin to a database that already has users, once.
+  // An existing user is never touched, so changing the password in the app sticks.
+  if (config.adminEmail && config.adminPassword && !(await User.exists({ email: config.adminEmail }))) {
+    try {
+      await User.create({ _id: `U-${randomUUID().slice(0, 8).toUpperCase()}`, name: config.adminName, email: config.adminEmail, role: 'admin', dept: 'management', title: 'Admin', color: '#8b3dff', active: true, ...hashPassword(config.adminPassword), tv: 0, createdAt: nowIso(), updatedAt: nowIso() });
+      log(`[crm] Admin added -> ${config.adminEmail}`);
+    } catch (err) {
+      if (err.code !== 11000) throw err; // another instance created it first
+    }
   }
 }
