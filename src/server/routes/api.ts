@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { DiagnosticPayload, Lang } from '../../shared/types.js';
 import { getQuestions } from '../../shared/diagnostic.js';
 import type { LeadStore } from '../lib/leadStore.js';
+import { sendToCrm } from '../lib/crm.js';
 import { mailLead } from '../lib/mailer.js';
 import { ReportError, buildReport } from '../../shared/report.js';
 
@@ -103,9 +104,9 @@ export function apiRouter(leads: LeadStore): Router {
     const { website: _honeypot, ...data } = parsed.data;
     const lead = { id: randomUUID(), receivedAt: new Date().toISOString(), ip: req.ip, ...data };
 
-    // Two copies, so a lead is never lost: our own store/log and an email to the WAV inbox.
+    // Three copies, so a lead is never lost: our own store/log, an email to the WAV inbox, and the CRM.
     // Both are awaited: on Vercel the function may be frozen as soon as the response is sent.
-    const [stored, emailed] = await Promise.all([
+    const [stored, emailed, inCrm] = await Promise.all([
       leads.add(lead).then(
         () => true,
         (err) => {
@@ -114,8 +115,9 @@ export function apiRouter(leads: LeadStore): Router {
         },
       ),
       mailLead(lead),
+      sendToCrm(lead),
     ]);
-    if (!stored && !emailed) {
+    if (!stored && !emailed && !inCrm) {
       res.status(500).json({ ok: false, error: 'Could not save your request.' });
       return;
     }
