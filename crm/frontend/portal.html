@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="referrer" content="no-referrer" />
+<meta name="theme-color" content="#07060b" />
+<title>WAV — مراجعة الشغل</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 124 124'%3E%3Crect width='124' height='124' rx='28' fill='%2307060b'/%3E%3Cpath d='M10 36 C 20 36 25 88 39 88 C 51 88 53 56 62 56 C 71 56 73 88 85 88 C 100 88 106 46 116 32' fill='none' stroke='%239b4dff' stroke-width='13' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg: #07060b; --surface: #12101b; --surface-2: #1a1527; --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.16); --text: #f5f2ff; --muted: #a69fbd; --dim: #6d6683; --violet: #8b3dff; --violet-2: #b06bff; --lime: #c8ff3d; --amber: #ffb547; --red: #ff5c7a; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: Alexandria, Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  html[lang=en] body { font-family: Inter, system-ui, sans-serif; }
+  a { color: var(--violet-2); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 22px 16px 60px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; letter-spacing: .4em; font-size: 13px; font-weight: 600; color: var(--muted); direction: ltr; }
+  .brand i { font-style: normal; color: var(--violet-2); }
+  .lang { background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 7px 12px; font: inherit; font-size: .8rem; cursor: pointer; }
+  .hero { margin: 26px 0 8px; }
+  .hero h1 { margin: 0; font-size: clamp(1.5rem, 5vw, 2.1rem); line-height: 1.3; }
+  .hero h1 span { background: linear-gradient(100deg, #8b3dff, #e07bff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); margin: 8px 0 0; line-height: 1.7; }
+  .wave { height: 4px; border-radius: 4px; margin: 20px 0 6px; background: linear-gradient(100deg, #5b2bff, #8b3dff 45%, #e07bff); }
+  h2 { font-size: 1rem; margin: 28px 0 12px; display: flex; align-items: center; gap: 8px; }
+  h2 .n { background: var(--violet); color: #fff; border-radius: 99px; font-size: .72rem; padding: 2px 9px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
+  .card.done { opacity: .75; }
+  .top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .title { font-weight: 600; font-size: 1rem; line-height: 1.45; }
+  .meta { color: var(--dim); font-size: .78rem; margin-top: 3px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 99px; padding: 3px 10px; font-size: .72rem; font-weight: 600; white-space: nowrap; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); }
+  .caption { white-space: pre-wrap; background: var(--surface-2); border-radius: 12px; padding: 12px; margin-top: 12px; font-size: .88rem; line-height: 1.75; color: #e7e2f7; }
+  .view { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: .88rem; font-weight: 600; text-decoration: none; }
+  .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .btn { flex: 1; min-width: 140px; border: 0; border-radius: 12px; padding: 12px 14px; font: inherit; font-weight: 600; cursor: pointer; font-size: .9rem; }
+  .btn.ok { background: var(--lime); color: #07060b; }
+  .btn.chg { background: transparent; color: var(--amber); border: 1px solid rgba(255,181,71,.4); }
+  .btn.send { background: var(--violet); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  textarea { width: 100%; margin-top: 12px; background: var(--bg); color: var(--text); border: 1px solid var(--line-strong); border-radius: 12px; padding: 12px; font: inherit; font-size: .9rem; min-height: 90px; resize: vertical; }
+  .note { margin-top: 10px; font-size: .84rem; color: var(--muted); white-space: pre-wrap; }
+  .empty { text-align: center; color: var(--muted); padding: 30px 16px; }
+  .empty b { display: block; color: var(--text); font-size: 1.05rem; margin-bottom: 6px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .stats div { background: var(--surface-2); border-radius: 12px; padding: 12px; }
+  .stats small { display: block; color: var(--dim); font-size: .72rem; }
+  .stats b { display: block; font-size: 1.15rem; margin-top: 4px; direction: ltr; text-align: start; }
+  .block { margin-top: 12px; font-size: .88rem; line-height: 1.75; }
+  .block small { color: var(--dim); display: block; }
+  .msg { text-align: center; padding: 60px 16px; color: var(--muted); }
+  .toast { position: fixed; inset-inline: 16px; bottom: 20px; margin: 0 auto; max-width: 420px; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 14px; padding: 12px 16px; text-align: center; font-size: .9rem; transform: translateY(20px); opacity: 0; visibility: hidden; pointer-events: none; transition: transform .3s, opacity .3s, visibility .3s; }
+  .toast.on { transform: none; opacity: 1; visibility: visible; }
+  details summary { cursor: pointer; color: var(--muted); font-size: .9rem; margin: 26px 0 12px; }
+  footer { margin-top: 40px; text-align: center; color: var(--dim); font-size: .75rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="brand"><svg width="30" viewBox="0 0 124 124" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#5b2bff"/><stop offset=".5" stop-color="#9b4dff"/><stop offset="1" stop-color="#e07bff"/></linearGradient></defs><path d="M10 36 C 20 36 25 88 39 88 C 51 88 53 56 62 56 C 71 56 73 88 85 88 C 100 88 106 46 116 32" fill="none" stroke="url(#g)" stroke-width="13" stroke-linecap="round"/></svg>W<i>Λ</i>V</div>
+    <button class="lang" id="lang">English</button></header>
+  <main id="app"><div class="msg" id="loading">…</div></main>
+  <footer id="foot"></footer>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+const T = {
+  ar: {
+    hello: 'أهلًا {name}', lead: 'دي الحاجات اللي مستنية رأيك. وافق، أو اكتبلنا عايز تعدّل إيه.',
+    waiting: 'مستني موافقتك', nothing: 'مفيش حاجة مستنياك دلوقتي', nothingSub: 'أول ما نبعت حاجة جديدة هتلاقيها هنا.',
+    post: 'بوست', deliverable: 'تسليم', view: 'شوف التصميم ↗', open: 'افتح ↗',
+    approve: 'موافق ✓', changes: 'عايز تعديل', send: 'ابعت التعديل', notePh: 'اكتب التعديل اللي محتاجه…', cancel: 'إلغاء',
+    approved: 'وافقت', asked: 'طلبت تعديل', past: 'ردودك اللي فاتت', thanks: 'شكرًا! وصلنا ردك.', needNote: 'اكتبلنا التعديل الأول.',
+    report: 'نتايج آخر شهر', spend: 'صرف الإعلانات', leads: 'الليدز', cpl: 'تكلفة الليد', highlights: 'حصل إيه', next: 'خطة الشهر الجاي',
+    invalid: 'اللينك ده مش شغال. اطلب لينك جديد من فريقنا.', error: 'حصلت مشكلة في الاتصال. جرّب تاني بعد شوية.', retry: 'جرّب تاني',
+    lang: 'English', foot: 'صفحة خاصة بيك من {agency}. متبعتش اللينك لحد.',
+    platform: { instagram: 'إنستجرام', facebook: 'فيسبوك', tiktok: 'تيك توك', linkedin: 'لينكدإن', snapchat: 'سناب شات', youtube: 'يوتيوب', x: 'X' },
+    format: { post: 'بوست', reel: 'ريلز', story: 'ستوري', carousel: 'كاروسيل', video: 'فيديو', ad: 'إعلان' },
+  },
+  en: {
+    hello: 'Hi {name}', lead: 'Here is what is waiting for your review. Approve it, or tell us what to change.',
+    waiting: 'Waiting for your approval', nothing: 'Nothing is waiting for you right now', nothingSub: 'New work will show up here as soon as we send it.',
+    post: 'Post', deliverable: 'Deliverable', view: 'View the design ↗', open: 'Open ↗',
+    approve: 'Approve ✓', changes: 'Request changes', send: 'Send changes', notePh: 'Tell us what to change…', cancel: 'Cancel',
+    approved: 'You approved', asked: 'You asked for changes', past: 'Your earlier answers', thanks: 'Thank you! We got your answer.', needNote: 'Please write what to change first.',
+    report: 'Last month’s results', spend: 'Ad spend', leads: 'Leads', cpl: 'Cost per lead', highlights: 'What happened', next: 'Next month’s plan',
+    invalid: 'This link is not working. Ask our team for a new one.', error: 'Connection problem. Please try again shortly.', retry: 'Try again',
+    lang: 'العربية', foot: 'A private page from {agency}. Please don’t share this link.',
+    platform: { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', linkedin: 'LinkedIn', snapchat: 'Snapchat', youtube: 'YouTube', x: 'X' },
+    format: { post: 'Post', reel: 'Reel', story: 'Story', carousel: 'Carousel', video: 'Video', ad: 'Ad' },
+  },
+};
+const PLAT_C = { instagram: '#e1306c', facebook: '#4c8dff', tiktok: '#25f4ee', linkedin: '#2d8cff', snapchat: '#fffc00', youtube: '#ff3b3b', x: '#e8e8e8' };
+let LANG = (() => { try { return localStorage.getItem('wav_portal_lang') || 'ar'; } catch (e) { return 'ar'; } })();
+const t = (k, p = {}) => String(T[LANG][k] ?? k).replace(/\{(\w+)\}/g, (_, n) => p[n] ?? '');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (s, r = document) => r.querySelector(s);
+const KEY = (new URLSearchParams(location.hash.slice(1)).get('k') || '').trim();
+let DATA = null;
+const API = 'api';
+
+async function call(action, data = {}) {
+  const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action, key: KEY, ...data }) });
+  if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { code: 'NET' });
+  const j = await res.json();
+  if (!j.ok) throw Object.assign(new Error(j.error || 'Error'), { code: j.code || 'ERR' });
+  return j;
+}
+const fmtDate = (iso) => { if (!iso) return ''; const [y, m, d] = iso.slice(0, 10).split('-').map(Number); return new Intl.DateTimeFormat(LANG === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(y, m - 1, d)); };
+const fmtMonth = (key) => { const [y, m] = key.split('-').map(Number); return new Intl.DateTimeFormat(LANG === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB', { month: 'long', year: 'numeric' }).format(new Date(y, m - 1, 1)); };
+const CUR = { EGP: { ar: 'ج.م', en: 'EGP' }, SAR: { ar: 'ر.س', en: 'SAR' }, AED: { ar: 'د.إ', en: 'AED' }, USD: { ar: '$', en: '$' } };
+const money = (v) => { const n = Math.round(Number(v) || 0).toLocaleString('en-US'); const c = DATA?.currency || 'EGP'; return c === 'USD' ? `$${n}` : `${n} ${(CUR[c] || CUR.EGP)[LANG]}`; };
+
+function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 3200); }
+
+function itemCard(it, pending) {
+  const isPost = it.kind === 'content';
+  const chip = isPost ? `<span class="chip" style="--c:${PLAT_C[it.platform] || '#b06bff'}">${esc(T[LANG].platform[it.platform] || it.platform)}${it.format ? ' · ' + esc(T[LANG].format[it.format] || it.format) : ''}</span>` : `<span class="chip" style="--c:#b06bff">${t('deliverable')}</span>`;
+  const meta = isPost ? `${fmtDate(it.date)}${it.time ? ' · ' + esc(it.time) : ''}` : esc(it.project);
+  const decision = isPost ? it.clientApproval : (it.status === 'approved' || it.status === 'changes' ? it.status : '');
+  const note = isPost ? it.clientNote : it.note;
+  return `<article class="card ${pending ? '' : 'done'}" data-kind="${it.kind}" data-id="${esc(it.id)}" data-project="${esc(it.projectId || '')}">
+    <div class="top"><div><div class="title">${esc(it.title)}</div><div class="meta">${meta}</div></div>${chip}</div>
+    ${isPost && it.caption ? `<div class="caption">${esc(it.caption)}</div>` : ''}
+    ${it.link ? `<a class="view" href="${esc(it.link)}" target="_blank" rel="noopener noreferrer">${isPost ? t('view') : t('open')}</a>` : ''}
+    ${pending ? `<div class="actions"><button class="btn ok" data-do="approved">${t('approve')}</button><button class="btn chg" data-do="open">${t('changes')}</button></div>`
+      : `<div class="note"><span class="chip" style="--c:${decision === 'approved' ? '#c8ff3d' : '#ffb547'}">${decision === 'approved' ? t('approved') : t('asked')}</span>${note ? `<div style="margin-top:8px">${esc(note)}</div>` : ''}</div>`}
+  </article>`;
+}
+
+function render() {
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  $('#lang').textContent = t('lang');
+  const app = $('#app');
+  if (!DATA) return;
+  const posts = DATA.content.map((x) => ({ ...x, kind: 'content' }));
+  const dl = DATA.deliverables.map((x) => ({ ...x, kind: 'deliverable' }));
+  const pending = [...posts.filter((x) => x.status === 'approval' && !x.clientApproval), ...dl.filter((x) => x.status === 'sent')];
+  const done = [...posts.filter((x) => x.clientApproval), ...dl.filter((x) => x.status === 'approved' || x.status === 'changes')].sort((a, b) => ((a.clientAt || a.at) < (b.clientAt || b.at) ? 1 : -1));
+  const r = DATA.report;
+  app.innerHTML = `<section class="hero"><h1>${t('hello', { name: `<span>${esc(DATA.client.contact || DATA.client.name)}</span>` })}</h1><p>${t('lead')}</p></section><div class="wave"></div>
+    <h2>${t('waiting')} ${pending.length ? `<span class="n">${pending.length}</span>` : ''}</h2>
+    ${pending.length ? pending.map((x) => itemCard(x, true)).join('') : `<div class="card empty"><b>${t('nothing')}</b>${t('nothingSub')}</div>`}
+    ${r ? `<h2>${t('report')} · ${esc(fmtMonth(r.month))}</h2><div class="card"><div class="stats"><div><small>${t('spend')}</small><b>${money(r.spend)}</b></div><div><small>${t('leads')}</small><b>${Math.round(r.leads).toLocaleString('en-US')}</b></div><div><small>${t('cpl')}</small><b>${r.leads ? money(r.spend / r.leads) : '—'}</b></div></div>
+      ${r.highlights ? `<div class="block"><small>${t('highlights')}</small>${esc(r.highlights)}</div>` : ''}${r.nextSteps ? `<div class="block"><small>${t('next')}</small>${esc(r.nextSteps)}</div>` : ''}</div>` : ''}
+    ${done.length ? `<details><summary>${t('past')} (${done.length})</summary>${done.map((x) => itemCard(x, false)).join('')}</details>` : ''}`;
+  $('#foot').textContent = t('foot', { agency: DATA.agency || 'WAV' });
+}
+
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-do]');
+  if (!b) return;
+  const card = b.closest('.card');
+  const what = b.dataset.do;
+  if (what === 'open') {
+    $('.actions', card).innerHTML = `<textarea placeholder="${t('notePh')}" maxlength="1000"></textarea><div class="actions" style="width:100%"><button class="btn send" data-do="changes">${t('send')}</button><button class="btn chg" data-do="cancel">${t('cancel')}</button></div>`;
+    $('textarea', card).focus();
+    return;
+  }
+  if (what === 'cancel') return render();
+  const note = $('textarea', card)?.value.trim() || '';
+  if (what === 'changes' && !note) { toast(t('needNote')); return $('textarea', card)?.focus(); }
+  card.querySelectorAll('button').forEach((x) => (x.disabled = true));
+  try {
+    await call('portalAct', { kind: card.dataset.kind, id: card.dataset.id, projectId: card.dataset.project, decision: what, note });
+    toast(t('thanks'));
+    await load();
+  } catch (err) {
+    toast(err.code === 'FORBIDDEN' ? t('invalid') : err.code === 'BAD' && err.message ? err.message : t('error'));
+    card.querySelectorAll('button').forEach((x) => (x.disabled = false));
+  }
+});
+$('#lang').addEventListener('click', () => { LANG = LANG === 'ar' ? 'en' : 'ar'; try { localStorage.setItem('wav_portal_lang', LANG); } catch (e) {} render(); if (!DATA) load(); });
+
+async function load() {
+  try {
+    DATA = await call('portal');
+    render();
+  } catch (err) {
+    $('#app').innerHTML = `<div class="msg">${err.code === 'FORBIDDEN' ? t('invalid') : `${t('error')}<br><br><button class="btn send" style="flex:none" onclick="location.reload()">${t('retry')}</button>`}</div>`;
+  }
+}
+render();
+if (!/^[a-f0-9]{48}$/.test(KEY)) $('#app').innerHTML = `<div class="msg">${t('invalid')}</div>`;
+else load();
+</script>
+</body>
+</html>

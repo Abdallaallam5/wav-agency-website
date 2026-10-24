@@ -57,9 +57,27 @@ cd frontend && node build.mjs
 |---|---|
 | `login` | دخول بالإيميل والباسورد، بيرجع token والداتا |
 | `bootstrap` / `changes` | تحميل الداتا / التغييرات من بعد `since` |
-| `batch` | upsert أو remove لحد 50 سجل (leads, clients, projects, tasks, content, invoices, activity) |
+| `batch` | upsert أو remove لحد 50 سجل (leads, clients, projects, tasks, content, invoices, activity, results, adfunds, proposals) |
 | `saveUser` / `saveSettings` | الفريق والإعدادات (Admin بس) |
 | `changePassword` | تغيير الباسورد |
 | `websiteLead` | ليد من الموقع، بيحتاج `key` |
+| `portal` / `portalAct` | صفحة العميل: بيحتاجوا `key` بتاع العميل (من غير تسجيل دخول) |
 
-الصلاحيات (Admin / Manager / Member) بتتراجع على السيرفر. قفل محاولات الدخول وحد الـ leads متخزنين في MongoDB، فبيشتغلوا صح على Vercel.
+وفيه كمان:
+- `GET /api/cron/digest`: الملخص اليومي بالإيميل، Vercel Cron بيناديه كل يوم الساعة 8 الصبح بتوقيت القاهرة.
+- `GET/POST /api/meta`: webhook بتاع Meta Lead Ads.
+
+الصلاحيات (Admin / Manager / Member) بتتراجع على السيرفر. الفواتير وفلوس الإعلانات مش بتتبعت أصلًا للـ Member. قفل محاولات الدخول وحد الـ leads متخزنين في MongoDB، فبيشتغلوا صح على Vercel.
+
+## بوابة العميل
+من صفحة العميل ← تبويب "لينك العميل" ← "اعمل لينك العميل". اللينك شكله `https://<الـ CRM>/portal.html#k=...`. العميل بيشوف منه البوستات اللي في مرحلة "موافقة" والتسليمات اللي حالتها "اتبعت للعميل"، ويوافق أو يطلب تعديل. ردّه بيوصل إيميل لمدير حساب العميل، وبيظهر في الكالندر والنشاط. لو اللينك اتسرب، دوس "لينك جديد" والقديم هيبطل يشتغل.
+
+## الإيميلات والملخص اليومي
+ضيف على Vercel: `SMTP_USER` و`SMTP_PASS` (نفس Gmail App Password بتاع الموقع)، و`CRON_SECRET` (نص عشوائي طويل)، و`CRM_PUBLIC_URL` (لينك الـ CRM). كل واحد في الفريق يقدر يقفل الملخص من خانة "ملخص يومي بالإيميل" في صفحة الفريق.
+
+## Meta Lead Ads
+1. من [developers.facebook.com](https://developers.facebook.com) اعمل App (نوع Business) واربطه بصفحة WAV.
+2. هات Page Access Token طويل المدى فيه صلاحية `leads_retrieval` و`pages_manage_metadata`.
+3. على Vercel ضيف `META_VERIFY_TOKEN` (أي نص عشوائي)، و`META_APP_SECRET` (من App settings ← Basic)، و`META_PAGE_TOKEN`، واختياري `META_LEAD_OWNER` (إيميل اللي هيستلم الليدز). وبعدين أعد النشر.
+4. في الـ App ← Webhooks ← Page: الـ Callback URL هو `https://<الـ CRM>/api/meta`، والـ Verify token هو نفس `META_VERIFY_TOKEN`. اشترك في `leadgen`.
+5. اشترك الصفحة في الـ App (`POST /{page-id}/subscribed_apps?subscribed_fields=leadgen`)، وجرّب من [Lead Ads Testing Tool](https://developers.facebook.com/tools/lead-ads-testing).

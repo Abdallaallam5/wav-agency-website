@@ -3,6 +3,7 @@ import { COLLECTIONS, DEFAULT_SETTINGS, FINANCE_ONLY, FINANCE_ROLES, ROLES, SETT
 import { Deleted, Records, User, getMeta, setMeta } from './models.js';
 import { authenticate, checkPassword, hashPassword, makeToken, publicUser, safeEqual, throttle } from './auth.js';
 import { fail } from './errors.js';
+import { portalAct, portalView } from './portal.js';
 
 const nowIso = () => new Date().toISOString();
 
@@ -210,6 +211,8 @@ export async function dispatch(req) {
   if (action === 'ping') return { ok: true, now: nowIso() };
   if (action === 'login') return login(req);
   if (action === 'websiteLead') return websiteLead(req);
+  if (action === 'portal') return portalView(req);
+  if (action === 'portalAct') return portalAct(req);
 
   const user = await authenticate(req.token);
   switch (action) {

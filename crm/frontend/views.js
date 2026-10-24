@@ -206,7 +206,7 @@ const KIND_OF = { leads: 'lead', clients: 'client', projects: 'project', tasks: 
 function feedHTML(list, { notes = true } = {}) {
   if (!list.length) return emptyHTML();
   return `<ul class="feed">${list.map((a) => `<li>${avatar(userById(a.by), 'avatar--sm')}<div style="min-width:0;flex:1">
-    <p ${a.entity && a.entity !== 'invoices' || can.finance() ? `data-act="open" data-kind="${KIND_OF[a.entity] || ''}" data-id="${esc(a.entityId)}" style="cursor:pointer"` : ''}><b>${esc(userById(a.by)?.name || (a.by === 'client' ? t('portal.clientWho') : a.by === 'website' ? t('portal.websiteWho') : '—'))}</b> ${activityText(a)}</p>
+    <p ${a.entity && a.entity !== 'invoices' || can.finance() ? `data-act="open" data-kind="${KIND_OF[a.entity] || ''}" data-id="${esc(a.entityId)}" style="cursor:pointer"` : ''}><b>${esc(userById(a.by)?.name || (a.by === 'client' ? t('portal.clientWho') : a.by === 'website' ? t('portal.websiteWho') : a.by === 'meta' ? 'Meta Ads' : '—'))}</b> ${activityText(a)}</p>
     <small>${ago(a.at)}</small>${notes && a.type === 'note' ? `<div class="note">${esc(a.text)}</div>` : ''}</div></li>`).join('')}</ul>`;
 }
 
