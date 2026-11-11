@@ -3,3 +3,6 @@ dist/
 public/js/
 /data/
 .env
+
+/exports/
+/WAV_Leads_Cleaned.xlsx
