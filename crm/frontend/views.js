@@ -337,6 +337,7 @@ VIEWS.leads = {
       ${selectFilter('leads.service', ENUM.service, (s) => label('service', s), t('leads.allServices'))}
       <span class="grow"></span>
       ${seg('leads.mode', st.mode, [['board', t('leads.board'), 'board'], ['table', t('leads.table'), 'list']])}
+      ${can.finance() ? `<button class="btn btn--ghost btn--sm" data-act="importLeads">${icon('upload')}${t('imp.btn')}</button>` : ''}
       <button class="btn btn--ghost btn--sm" data-act="exportLeads">${icon('download')}${t('act.export')}</button>
       <button class="btn btn--sm" data-act="newRecord" data-col="leads">${icon('plus')}${t('new.lead')}</button></div>`;
     if (st.mode === 'table') return toolbar + leadsTable(leads, st);
@@ -379,12 +380,12 @@ function sortRows(rows, st, getters = {}) {
 }
 function leadsTable(leads, st) {
   if (!leads.length) return `<div class="card">${emptyHTML()}</div>`;
-  const rows = sortRows(leads, st, { stage: (l) => ENUM.stage.indexOf(l.stage), owner: (l) => userById(l.owner)?.name || '' });
+  const rows = sortRows(leads, st, { stage: (l) => ENUM.stage.indexOf(l.stage), owner: (l) => userById(l.owner)?.name || '', queue: (l) => Number(l.queue) || 99999 });
   return `<div class="table-wrap table-cards"><table class="table"><thead><tr>
-    ${sortable('leads', 'name', t('f.name'), st)}${sortable('leads', 'stage', t('f.stage'), st)}${sortable('leads', 'value', t('f.value'), st)}
+    ${sortable('leads', 'queue', '#', st)}${sortable('leads', 'name', t('f.name'), st)}${sortable('leads', 'stage', t('f.stage'), st)}${sortable('leads', 'value', t('f.value'), st)}
     ${sortable('leads', 'source', t('f.source'), st)}<th>${t('f.service')}</th>${sortable('leads', 'owner', t('f.owner'), st)}${sortable('leads', 'followUp', t('f.followUp'), st)}${sortable('leads', 'createdAt', t('f.created'), st)}
   </tr></thead><tbody>${rows.map((l) => `<tr data-act="open" data-kind="lead" data-id="${l.id}">
-    <td><div class="who"><div><b>${esc(l.name)}</b><small>${esc(l.company || '')}</small></div></div></td>
+    <td data-label="#" class="num">${l.queue || ''}</td><td><div class="who"><div><b>${esc(l.name)}</b><small>${esc(l.company || '')}</small></div></div></td>
     <td data-label="${t('f.stage')}">${pill('stage', l.stage)}</td><td data-label="${t('f.value')}" class="num">${money(l.value)}</td>
     <td data-label="${t('f.source')}">${esc(label('source', l.source))}</td><td data-label="${t('f.service')}">${esc(label('service', l.service))}</td>
     <td data-label="${t('f.owner')}">${esc(userById(l.owner)?.name || '—')}</td><td data-label="${t('f.followUp')}">${OPEN_STAGES.includes(l.stage) ? dueTag(l.followUp) : '—'}</td>
@@ -393,7 +394,7 @@ function leadsTable(leads, st) {
 ACT.exportLeads = () => download(`wav-leads-${today()}.csv`, toCSV(filteredLeads(), [
   { h: 'ID', v: (l) => l.id }, { h: 'Name', v: (l) => l.name }, { h: 'Company', v: (l) => l.company }, { h: 'Phone', v: (l) => l.phone }, { h: 'Email', v: (l) => l.email },
   { h: 'Stage', v: (l) => label('stage', l.stage) }, { h: 'Value', v: (l) => l.value }, { h: 'Source', v: (l) => label('source', l.source) }, { h: 'Service', v: (l) => label('service', l.service) },
-  { h: 'Owner', v: (l) => userById(l.owner)?.name }, { h: 'Follow-up', v: (l) => l.followUp }, { h: 'Pulse score', v: (l) => l.pulseScore }, { h: 'Created', v: (l) => dayOf(l.createdAt) },
+  { h: 'Owner', v: (l) => userById(l.owner)?.name }, { h: 'Follow-up', v: (l) => l.followUp }, { h: 'Pulse score', v: (l) => l.pulseScore }, { h: 'Queue #', v: (l) => l.queue }, { h: 'Sheet', v: (l) => l.batch }, { h: 'Created', v: (l) => dayOf(l.createdAt) },
 ]));
 
 async function setLeadStage(lead, stage) {

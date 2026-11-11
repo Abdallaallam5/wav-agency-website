@@ -1046,6 +1046,15 @@ const I18N = {
     'time.today': 'Today', 'time.tomorrow': 'Tomorrow', 'time.yesterday': 'Yesterday', 'time.daysAgo': '{n}d ago', 'time.inDays': 'in {n}d',
     'time.justNow': 'just now', 'time.minAgo': '{n}m ago', 'time.hoursAgo': '{n}h ago', 'time.overdue': '{n}d late',
 
+    'imp.btn': 'Import & distribute', 'imp.title': 'Import a sheet and distribute it to the team',
+    'imp.step1': 'Upload a sheet (.xlsx or .csv)', 'imp.choose': 'Choose file', 'imp.paste': 'Or paste the cells here (copied from Excel or Google Sheets)',
+    'imp.hint': 'The first row should hold the column names (name, phone, email, company...). Rows with no phone or email, and numbers already in the CRM, are skipped.',
+    'imp.cols': 'Match the columns', 'imp.none': '— none —', 'imp.team': 'Distribute to',
+    'imp.shuffle': 'Shuffle randomly, then deal one by one', 'imp.reshuffle': 'Shuffle again', 'imp.pasted': 'pasted rows',
+    'imp.summary': '{n} new clients · {d} duplicates skipped · {s} rows without a phone or email',
+    'imp.go': 'Import {n} and distribute', 'imp.done': '{n} clients added and dealt to {m} people. Each one has a # in their list.',
+    'imp.needPeople': 'Pick at least one team member.', 'imp.badFile': "Couldn't read that file.", 'imp.tooMany': 'Only the first {n} rows were read.',
+
     'pal.jump': 'Go to', 'pal.create': 'Create', 'pal.results': 'Results', 'pal.hint.move': 'navigate', 'pal.hint.open': 'open', 'pal.hint.close': 'close',
   },
 
@@ -1224,6 +1233,15 @@ const I18N = {
 
     'time.today': 'النهارده', 'time.tomorrow': 'بكرة', 'time.yesterday': 'امبارح', 'time.daysAgo': 'من {n} يوم', 'time.inDays': 'بعد {n} يوم',
     'time.justNow': 'دلوقتي', 'time.minAgo': 'من {n} دقيقة', 'time.hoursAgo': 'من {n} ساعة', 'time.overdue': 'متأخر {n} يوم',
+
+    'imp.btn': 'استيراد وتوزيع', 'imp.title': 'استيراد شيت وتوزيعه على الفريق',
+    'imp.step1': 'ارفع الشيت (xlsx أو csv)', 'imp.choose': 'اختار ملف', 'imp.paste': 'أو الزق الخلايا هنا (منسوخة من Excel أو Google Sheets)',
+    'imp.hint': 'أول صف يبقى فيه أسماء الأعمدة (الاسم، الموبايل، الإيميل، الشركة...). الصفوف اللي من غير موبايل أو إيميل، والأرقام الموجودة في الـ CRM أصلاً، بتتشال.',
+    'imp.cols': 'طابق الأعمدة', 'imp.none': '— مفيش —', 'imp.team': 'وزّع على',
+    'imp.shuffle': 'اخلطهم عشوائي وبعدين وزّعهم واحد واحد', 'imp.reshuffle': 'اخلط تاني', 'imp.pasted': 'صفوف ملصوقة',
+    'imp.summary': '{n} عميل جديد · {d} مكرر اتشال · {s} صف من غير موبايل أو إيميل',
+    'imp.go': 'استورد {n} ووزّع', 'imp.done': 'اتضاف {n} عميل وتوزّعوا على {m} من الفريق. كل واحد ليه رقم # في قايمته.',
+    'imp.needPeople': 'اختار عضو واحد على الأقل.', 'imp.badFile': 'مقدرتش أقرا الملف ده.', 'imp.tooMany': 'اتقرا أول {n} صف بس.',
 
     'pal.jump': 'روح لـ', 'pal.create': 'اعمل', 'pal.results': 'النتايج', 'pal.hint.move': 'تنقّل', 'pal.hint.open': 'افتح', 'pal.hint.close': 'اقفل',
   },
@@ -1549,6 +1567,19 @@ const Store = {
     emitChange();
     return existing || clean;
   },
+  /** Many new records at once (imports): one persist and one outbox write instead of one per record. */
+  saveMany(col, recs) {
+    const now = new Date().toISOString();
+    const clean = recs.map((rec) => {
+      const r = { ...rec, id: rec.id || uid(PREFIX[col]), createdAt: now, createdBy: me().id, updatedAt: now, updatedBy: me().id };
+      return JSON.parse(JSON.stringify(r));
+    });
+    DB[col].unshift(...clean);
+    this.persist();
+    if (isCloud()) Sync.pushMany(clean.map((record) => ({ op: 'upsert', collection: col, record })));
+    emitChange();
+    return clean;
+  },
   remove(col, id) {
     const i = DB[col].findIndex((r) => r.id === id);
     if (i < 0) return null;
@@ -1613,6 +1644,12 @@ const Sync = {
     // Collapse repeated upserts of the same record into the latest one.
     if (op.op === 'upsert') this.outbox = this.outbox.filter((o) => !(o.op === 'upsert' && o.collection === op.collection && o.record.id === op.record.id));
     this.outbox.push(op);
+    this.saveOutbox();
+    clearTimeout(this._ft);
+    this._ft = setTimeout(() => this.flush(), 350);
+  },
+  pushMany(ops) {
+    this.outbox.push(...ops);
     this.saveOutbox();
     clearTimeout(this._ft);
     this._ft = setTimeout(() => this.flush(), 350);
@@ -2776,6 +2813,7 @@ VIEWS.leads = {
       ${selectFilter('leads.service', ENUM.service, (s) => label('service', s), t('leads.allServices'))}
       <span class="grow"></span>
       ${seg('leads.mode', st.mode, [['board', t('leads.board'), 'board'], ['table', t('leads.table'), 'list']])}
+      ${can.finance() ? `<button class="btn btn--ghost btn--sm" data-act="importLeads">${icon('upload')}${t('imp.btn')}</button>` : ''}
       <button class="btn btn--ghost btn--sm" data-act="exportLeads">${icon('download')}${t('act.export')}</button>
       <button class="btn btn--sm" data-act="newRecord" data-col="leads">${icon('plus')}${t('new.lead')}</button></div>`;
     if (st.mode === 'table') return toolbar + leadsTable(leads, st);
@@ -2818,12 +2856,12 @@ function sortRows(rows, st, getters = {}) {
 }
 function leadsTable(leads, st) {
   if (!leads.length) return `<div class="card">${emptyHTML()}</div>`;
-  const rows = sortRows(leads, st, { stage: (l) => ENUM.stage.indexOf(l.stage), owner: (l) => userById(l.owner)?.name || '' });
+  const rows = sortRows(leads, st, { stage: (l) => ENUM.stage.indexOf(l.stage), owner: (l) => userById(l.owner)?.name || '', queue: (l) => Number(l.queue) || 99999 });
   return `<div class="table-wrap table-cards"><table class="table"><thead><tr>
-    ${sortable('leads', 'name', t('f.name'), st)}${sortable('leads', 'stage', t('f.stage'), st)}${sortable('leads', 'value', t('f.value'), st)}
+    ${sortable('leads', 'queue', '#', st)}${sortable('leads', 'name', t('f.name'), st)}${sortable('leads', 'stage', t('f.stage'), st)}${sortable('leads', 'value', t('f.value'), st)}
     ${sortable('leads', 'source', t('f.source'), st)}<th>${t('f.service')}</th>${sortable('leads', 'owner', t('f.owner'), st)}${sortable('leads', 'followUp', t('f.followUp'), st)}${sortable('leads', 'createdAt', t('f.created'), st)}
   </tr></thead><tbody>${rows.map((l) => `<tr data-act="open" data-kind="lead" data-id="${l.id}">
-    <td><div class="who"><div><b>${esc(l.name)}</b><small>${esc(l.company || '')}</small></div></div></td>
+    <td data-label="#" class="num">${l.queue || ''}</td><td><div class="who"><div><b>${esc(l.name)}</b><small>${esc(l.company || '')}</small></div></div></td>
     <td data-label="${t('f.stage')}">${pill('stage', l.stage)}</td><td data-label="${t('f.value')}" class="num">${money(l.value)}</td>
     <td data-label="${t('f.source')}">${esc(label('source', l.source))}</td><td data-label="${t('f.service')}">${esc(label('service', l.service))}</td>
     <td data-label="${t('f.owner')}">${esc(userById(l.owner)?.name || '—')}</td><td data-label="${t('f.followUp')}">${OPEN_STAGES.includes(l.stage) ? dueTag(l.followUp) : '—'}</td>
@@ -2832,7 +2870,7 @@ function leadsTable(leads, st) {
 ACT.exportLeads = () => download(`wav-leads-${today()}.csv`, toCSV(filteredLeads(), [
   { h: 'ID', v: (l) => l.id }, { h: 'Name', v: (l) => l.name }, { h: 'Company', v: (l) => l.company }, { h: 'Phone', v: (l) => l.phone }, { h: 'Email', v: (l) => l.email },
   { h: 'Stage', v: (l) => label('stage', l.stage) }, { h: 'Value', v: (l) => l.value }, { h: 'Source', v: (l) => label('source', l.source) }, { h: 'Service', v: (l) => label('service', l.service) },
-  { h: 'Owner', v: (l) => userById(l.owner)?.name }, { h: 'Follow-up', v: (l) => l.followUp }, { h: 'Pulse score', v: (l) => l.pulseScore }, { h: 'Created', v: (l) => dayOf(l.createdAt) },
+  { h: 'Owner', v: (l) => userById(l.owner)?.name }, { h: 'Follow-up', v: (l) => l.followUp }, { h: 'Pulse score', v: (l) => l.pulseScore }, { h: 'Queue #', v: (l) => l.queue }, { h: 'Sheet', v: (l) => l.batch }, { h: 'Created', v: (l) => dayOf(l.createdAt) },
 ]));
 
 async function setLeadStage(lead, stage) {
@@ -4450,6 +4488,291 @@ function seedAgencyExtras(T, clients) {
   );
   return { results, adfunds, proposals };
 }
+
+/* ==========================================================================
+   Import a sheet of prospects and deal them out to the team.
+   Reads .xlsx / .csv / pasted cells, matches columns, skips duplicates,
+   shuffles, then deals the rows round-robin so everyone gets the same share.
+   Each lead keeps its position in its owner's list (`queue`) and the sheet it came from (`batch`).
+   ========================================================================== */
+
+const IMPORT_MAX_ROWS = 3000;
+
+const IMPORT_FIELDS = [
+  { k: 'name', label: 'f.name', alias: ['name', 'full name', 'fullname', 'client', 'customer', 'contact', 'lead', 'الاسم', 'اسم', 'العميل', 'اسم العميل', 'الاسم بالكامل'] },
+  { k: 'phone', label: 'f.phone', alias: ['phone', 'mobile', 'tel', 'telephone', 'whatsapp', 'number', 'cell', 'الموبايل', 'موبايل', 'التليفون', 'تليفون', 'الهاتف', 'هاتف', 'رقم', 'رقم الموبايل', 'رقم التليفون', 'واتساب', 'واتس'] },
+  { k: 'email', label: 'f.email', alias: ['email', 'e-mail', 'mail', 'الايميل', 'ايميل', 'الإيميل', 'إيميل', 'البريد', 'البريد الالكتروني'] },
+  { k: 'company', label: 'f.company', alias: ['company', 'business', 'organization', 'organisation', 'brand', 'الشركة', 'شركة', 'الجهة', 'النشاط', 'البراند', 'اسم الشركة'] },
+  { k: 'city', label: 'f.city', alias: ['city', 'location', 'area', 'المدينة', 'مدينة', 'المنطقة', 'العنوان'] },
+  { k: 'notes', label: 'f.notes', alias: ['notes', 'note', 'comment', 'comments', 'ملاحظات', 'ملاحظة', 'تعليق'] },
+];
+
+/* ---------- reading files ---------- */
+
+const normHeader = (s) => String(s ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
+/** CSV / TSV with quotes. The delimiter is guessed from the first line. */
+function parseDelimited(text) {
+  text = text.replace(/^﻿/, '');
+  const first = text.split(/\r?\n/, 1)[0] || '';
+  const count = (ch) => (first.match(new RegExp(ch === '\t' ? '\\t' : '\\' + ch, 'g')) || []).length;
+  const delim = [',', ';', '\t'].sort((a, b) => count(b) - count(a))[0];
+  const rows = [];
+  let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === delim) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+
+/** Excel exports "CSV" in a legacy code page unless the user picks "CSV UTF-8": fall back so Arabic survives. */
+function decodeText(buf) {
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (e) { return new TextDecoder('windows-1256').decode(buf); }
+}
+
+/** Minimal .xlsx reader: an .xlsx is a zip of XML files, and browsers can inflate zip entries natively. */
+async function parseXlsx(buf) {
+  const u8 = new Uint8Array(buf), dv = new DataView(buf);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('not a zip');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const files = {};
+  for (let n = 0; n < count; n++) {
+    const nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+    files[new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen))] = { method: dv.getUint16(p + 10, true), size: dv.getUint32(p + 20, true), off: dv.getUint32(p + 42, true) };
+    p += 46 + nlen + elen + clen;
+  }
+  const read = async (name) => {
+    const f = files[name];
+    if (!f) return null;
+    const start = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true);
+    const data = u8.subarray(start, start + f.size);
+    if (f.method === 0) return new TextDecoder().decode(data);
+    return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  };
+  const xml = (s) => new DOMParser().parseFromString(s, 'application/xml');
+  const sheetName = Object.keys(files).filter((n) => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort((a, b) => parseInt(a.match(/\d+/)[0], 10) - parseInt(b.match(/\d+/)[0], 10))[0];
+  if (!sheetName) throw new Error('no sheet');
+  const shared = [];
+  const ss = await read('xl/sharedStrings.xml');
+  if (ss) Array.from(xml(ss).getElementsByTagName('si')).forEach((si) => shared.push(Array.from(si.getElementsByTagName('t')).map((t) => t.textContent).join('')));
+  const rows = [];
+  Array.from(xml(await read(sheetName)).getElementsByTagName('row')).forEach((r) => {
+    const row = [];
+    Array.from(r.getElementsByTagName('c')).forEach((c) => {
+      const letters = (c.getAttribute('r') || '').replace(/\d+/g, '');
+      let col = 0;
+      for (const ch of letters) col = col * 26 + ch.charCodeAt(0) - 64;
+      col = Math.max(col - 1, row.length);
+      const type = c.getAttribute('t');
+      const v = c.getElementsByTagName('v')[0]?.textContent ?? '';
+      row[col] = type === 's' ? shared[Number(v)] ?? '' : type === 'inlineStr' ? Array.from(c.getElementsByTagName('t')).map((t) => t.textContent).join('') : v;
+    });
+    rows.push(row);
+  });
+  return rows;
+}
+
+async function readSheetFile(file) {
+  const buf = await file.arrayBuffer();
+  if (/\.xlsx$/i.test(file.name) || new Uint8Array(buf.slice(0, 2)).join() === '80,75') return parseXlsx(buf);
+  return parseDelimited(decodeText(buf));
+}
+
+/* ---------- cleaning ---------- */
+
+const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+const asciiDigits = (s) => String(s).replace(/[٠-٩]/g, (d) => ARABIC_DIGITS.indexOf(d));
+
+function cleanPhone(v) {
+  let s = asciiDigits(v).replace(/[^\d+]/g, '');
+  if (s.startsWith('+20')) s = '0' + s.slice(3);
+  else if (s.startsWith('0020')) s = '0' + s.slice(4);
+  else if (/^20\d{10}$/.test(s)) s = '0' + s.slice(2);
+  if (/^1\d{9}$/.test(s)) s = '0' + s; // Excel drops the leading zero of Egyptian mobiles
+  return s.replace(/\+/g, (m, i) => (i === 0 ? m : ''));
+}
+const phoneKey = (p) => (p.replace(/\D/g, '').length >= 7 ? p.replace(/\D/g, '').slice(-10) : '');
+
+/** Which column feeds which field, found by header name. Returns { map, hasHeader }. */
+function guessMapping(rows) {
+  const head = (rows[0] || []).map(normHeader);
+  const map = {};
+  IMPORT_FIELDS.forEach((f) => {
+    const aliases = f.alias.map(normHeader);
+    let i = head.findIndex((h, ix) => h && aliases.includes(h) && !Object.values(map).includes(ix));
+    if (i < 0) i = head.findIndex((h, ix) => h && aliases.some((a) => a.length > 2 && h.includes(a)) && !Object.values(map).includes(ix));
+    if (i >= 0) map[f.k] = i;
+  });
+  const hasHeader = Object.keys(map).length > 0;
+  if (!hasHeader) ['name', 'phone', 'email', 'company'].forEach((k, i) => { if (i < (rows[0] || []).length) map[k] = i; });
+  return { map, hasHeader };
+}
+
+function buildLeadRows(imp) {
+  const existing = new Set();
+  [...DB.leads, ...DB.clients].forEach((r) => { const k = phoneKey(cleanPhone(r.phone || '')); if (k) existing.add('p' + k); if (r.email) existing.add('e' + String(r.email).toLowerCase().trim()); });
+  const seen = new Set();
+  const out = { rows: [], dup: 0, skipped: 0 };
+  imp.rows.slice(imp.hasHeader ? 1 : 0).forEach((r) => {
+    if (!r.some((c) => String(c ?? '').trim())) return;
+    const get = (k) => (imp.map[k] === undefined ? '' : String(r[imp.map[k]] ?? '').trim());
+    const phone = cleanPhone(get('phone'));
+    const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(get('email')) ? get('email').toLowerCase() : '';
+    if (!phoneKey(phone) && !email) { out.skipped++; return; }
+    const keys = [phoneKey(phone) && 'p' + phoneKey(phone), email && 'e' + email].filter(Boolean);
+    if (keys.some((k) => existing.has(k) || seen.has(k))) { out.dup++; return; }
+    keys.forEach((k) => seen.add(k));
+    out.rows.push({ name: get('name') || get('company') || phone || email, company: get('company'), phone: phoneKey(phone) ? phone : '', email, city: get('city'), notes: get('notes') });
+  });
+  return out;
+}
+
+function shuffled(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Deal the rows one by one to the chosen people. Returns [{ row, owner, queue }]. */
+function dealRows(rows, userIds, shuffle) {
+  const order = shuffle ? shuffled(rows) : rows;
+  const people = shuffled(userIds); // so the leftover rows don't always go to the same people
+  const next = {};
+  return order.map((row, i) => {
+    const owner = people[i % people.length];
+    next[owner] = (next[owner] || 0) + 1;
+    return { row, owner, queue: next[owner] };
+  });
+}
+
+/* ---------- the dialog ---------- */
+
+ACT.importLeads = () => {
+  closeMenu();
+  const people = DB.users.filter((u) => u.active !== false);
+  const imp = {
+    rows: [], map: {}, hasHeader: true, fileName: '',
+    users: new Set(people.filter((u) => u.role !== 'admin').map((u) => u.id)),
+    shuffle: true, deal: [], result: null,
+  };
+  if (!imp.users.size) people.forEach((u) => imp.users.add(u.id));
+
+  openModal({
+    title: t('imp.title'), width: 760,
+    body: '<div id="impRoot"></div>',
+    foot: `<button class="btn btn--ghost" data-act="closeModal">${t('act.cancel')}</button><button class="btn" id="impGo" disabled>${icon('check')}${t('imp.go', { n: 0 })}</button>`,
+    onMount(m) {
+      const root = $('#impRoot', m), go = $('#impGo', m);
+
+      const recompute = (reshuffle = true) => {
+        imp.result = imp.rows.length ? buildLeadRows(imp) : null;
+        if (imp.result && (reshuffle || !imp.deal.length)) imp.deal = imp.users.size ? dealRows(imp.result.rows, [...imp.users], imp.shuffle) : [];
+      };
+
+      const draw = () => {
+        const res = imp.result;
+        const cols = imp.rows[0] || [];
+        const colName = (i) => (imp.hasHeader && String(cols[i] ?? '').trim()) || `#${i + 1}`;
+        const colOptions = (sel) => `<option value="">${t('imp.none')}</option>` + cols.map((_, i) => `<option value="${i}" ${sel === i ? 'selected' : ''}>${esc(colName(i))}</option>`).join('');
+        const counts = {};
+        imp.deal.forEach((d) => { counts[d.owner] = (counts[d.owner] || 0) + 1; });
+
+        root.innerHTML = `
+          <div class="field field--full"><span>${t('imp.step1')}</span>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <label class="btn btn--ghost btn--sm" style="cursor:pointer">${icon('upload')}${t('imp.choose')}<input type="file" id="impFile" accept=".xlsx,.csv,.tsv,.txt,text/csv" hidden /></label>
+              <span class="muted" id="impName">${esc(imp.fileName)}</span>
+            </div>
+            <textarea id="impPaste" rows="3" placeholder="${esc(t('imp.paste'))}" style="margin-top:8px"></textarea>
+            <small class="muted">${t('imp.hint')}</small>
+          </div>
+          ${res ? `
+          <div class="sect" style="margin-top:16px"><h4 style="margin:0 0 8px">${t('imp.cols')}</h4>
+            <div class="form-grid">${IMPORT_FIELDS.map((f) => `<label class="field"><span>${t(f.label)}</span><select data-imp-col="${f.k}">${colOptions(imp.map[f.k])}</select></label>`).join('')}</div>
+          </div>
+          <div class="sect" style="margin-top:16px"><h4 style="margin:0 0 8px">${t('imp.team')}</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">${DB.users.filter((u) => u.active !== false).map((u) => `
+              <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid rgba(255,255,255,.12);border-radius:10px;cursor:pointer">
+                <input type="checkbox" data-imp-user="${esc(u.id)}" ${imp.users.has(u.id) ? 'checked' : ''} />${avatar(u, 'avatar--sm')}<span>${esc(u.name)}</span>
+                <b class="num">${counts[u.id] || 0}</b></label>`).join('')}</div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer"><input type="checkbox" id="impShuffle" ${imp.shuffle ? 'checked' : ''} />${t('imp.shuffle')}</label>
+          </div>
+          <p style="margin:16px 0 8px"><b>${t('imp.summary', { n: res.rows.length, d: res.dup, s: res.skipped })}</b>
+            ${res.rows.length && imp.users.size ? `<button class="btn btn--ghost btn--sm" id="impReshuffle" style="margin-inline-start:10px">${icon('repeat')}${t('imp.reshuffle')}</button>` : ''}</p>
+          ${imp.deal.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>#</th><th>${t('f.name')}</th><th>${t('f.phone')}</th><th>${t('f.owner')}</th></tr></thead><tbody>
+            ${imp.deal.slice(0, 6).map((d) => `<tr><td class="num">${d.queue}</td><td>${esc(d.row.name)}</td><td dir="ltr">${esc(d.row.phone || d.row.email)}</td><td>${esc(userById(d.owner)?.name || '')}</td></tr>`).join('')}
+          </tbody></table></div>` : ''}` : ''}`;
+
+        go.disabled = !(imp.deal.length && imp.users.size);
+        go.innerHTML = `${icon('check')}${t('imp.go', { n: imp.deal.length })}`;
+      };
+
+      const load = (rows, name) => {
+        rows = rows.filter((r) => r.length);
+        if (!rows.length) return toast(t('imp.badFile'), { err: true });
+        if (rows.length > IMPORT_MAX_ROWS + 1) { rows = rows.slice(0, IMPORT_MAX_ROWS + 1); toast(t('imp.tooMany', { n: IMPORT_MAX_ROWS }), { err: true }); }
+        Object.assign(imp, { rows, fileName: name }, guessMapping(rows));
+        recompute();
+        draw();
+      };
+
+      root.addEventListener('change', async (e) => {
+        const el = e.target;
+        if (el.id === 'impFile' && el.files[0]) {
+          try { load(await readSheetFile(el.files[0]), el.files[0].name); } catch (err) { toast(t('imp.badFile'), { err: true }); }
+        } else if (el.dataset.impCol) {
+          if (el.value === '') delete imp.map[el.dataset.impCol]; else imp.map[el.dataset.impCol] = Number(el.value);
+          recompute(); draw();
+        } else if (el.dataset.impUser) {
+          if (el.checked) imp.users.add(el.dataset.impUser); else imp.users.delete(el.dataset.impUser);
+          recompute(); draw();
+        } else if (el.id === 'impShuffle') {
+          imp.shuffle = el.checked; recompute(); draw();
+        }
+      });
+      root.addEventListener('input', (e) => {
+        if (e.target.id !== 'impPaste') return;
+        clearTimeout(imp._pt);
+        imp._pt = setTimeout(() => { const v = e.target.value; if (v.trim()) load(parseDelimited(v), t('imp.pasted')); }, 400);
+      });
+      root.addEventListener('click', (e) => { if (e.target.closest('#impReshuffle')) { recompute(true); draw(); } });
+
+      go.addEventListener('click', () => {
+        if (!imp.users.size) return toast(t('imp.needPeople'), { err: true });
+        if (!imp.deal.length) return;
+        const batch = `${today()} · ${imp.fileName}`;
+        const at = today();
+        const recs = imp.deal.map(({ row, owner, queue }) => ({
+          name: row.name, company: row.company, phone: row.phone, email: row.email, city: row.city, notes: row.notes,
+          source: 'cold', service: '', industry: '', stage: 'new', value: 0, owner, followUp: at, queue, batch,
+        }));
+        const n = recs.length, people = new Set(recs.map((r) => r.owner)).size;
+        Store.saveMany('leads', recs);
+        closeModal();
+        const st = uiState('leads', {});
+        Object.assign(st, { mode: 'table', owner: '', source: '', service: '', q: '', sort: 'queue', dir: 'asc' });
+        saveUI();
+        if (ROUTE.view === 'leads') renderView(); else location.hash = '#/leads';
+        toast(t('imp.done', { n, m: people }));
+      });
+
+      draw();
+    },
+  });
+};
 
 /* Boot — runs last, after every view and handler is defined. */
 (function boot() {

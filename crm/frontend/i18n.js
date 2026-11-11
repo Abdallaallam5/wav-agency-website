@@ -178,6 +178,15 @@ const I18N = {
     'time.today': 'Today', 'time.tomorrow': 'Tomorrow', 'time.yesterday': 'Yesterday', 'time.daysAgo': '{n}d ago', 'time.inDays': 'in {n}d',
     'time.justNow': 'just now', 'time.minAgo': '{n}m ago', 'time.hoursAgo': '{n}h ago', 'time.overdue': '{n}d late',
 
+    'imp.btn': 'Import & distribute', 'imp.title': 'Import a sheet and distribute it to the team',
+    'imp.step1': 'Upload a sheet (.xlsx or .csv)', 'imp.choose': 'Choose file', 'imp.paste': 'Or paste the cells here (copied from Excel or Google Sheets)',
+    'imp.hint': 'The first row should hold the column names (name, phone, email, company...). Rows with no phone or email, and numbers already in the CRM, are skipped.',
+    'imp.cols': 'Match the columns', 'imp.none': '— none —', 'imp.team': 'Distribute to',
+    'imp.shuffle': 'Shuffle randomly, then deal one by one', 'imp.reshuffle': 'Shuffle again', 'imp.pasted': 'pasted rows',
+    'imp.summary': '{n} new clients · {d} duplicates skipped · {s} rows without a phone or email',
+    'imp.go': 'Import {n} and distribute', 'imp.done': '{n} clients added and dealt to {m} people. Each one has a # in their list.',
+    'imp.needPeople': 'Pick at least one team member.', 'imp.badFile': "Couldn't read that file.", 'imp.tooMany': 'Only the first {n} rows were read.',
+
     'pal.jump': 'Go to', 'pal.create': 'Create', 'pal.results': 'Results', 'pal.hint.move': 'navigate', 'pal.hint.open': 'open', 'pal.hint.close': 'close',
   },
 
@@ -356,6 +365,15 @@ const I18N = {
 
     'time.today': 'النهارده', 'time.tomorrow': 'بكرة', 'time.yesterday': 'امبارح', 'time.daysAgo': 'من {n} يوم', 'time.inDays': 'بعد {n} يوم',
     'time.justNow': 'دلوقتي', 'time.minAgo': 'من {n} دقيقة', 'time.hoursAgo': 'من {n} ساعة', 'time.overdue': 'متأخر {n} يوم',
+
+    'imp.btn': 'استيراد وتوزيع', 'imp.title': 'استيراد شيت وتوزيعه على الفريق',
+    'imp.step1': 'ارفع الشيت (xlsx أو csv)', 'imp.choose': 'اختار ملف', 'imp.paste': 'أو الزق الخلايا هنا (منسوخة من Excel أو Google Sheets)',
+    'imp.hint': 'أول صف يبقى فيه أسماء الأعمدة (الاسم، الموبايل، الإيميل، الشركة...). الصفوف اللي من غير موبايل أو إيميل، والأرقام الموجودة في الـ CRM أصلاً، بتتشال.',
+    'imp.cols': 'طابق الأعمدة', 'imp.none': '— مفيش —', 'imp.team': 'وزّع على',
+    'imp.shuffle': 'اخلطهم عشوائي وبعدين وزّعهم واحد واحد', 'imp.reshuffle': 'اخلط تاني', 'imp.pasted': 'صفوف ملصوقة',
+    'imp.summary': '{n} عميل جديد · {d} مكرر اتشال · {s} صف من غير موبايل أو إيميل',
+    'imp.go': 'استورد {n} ووزّع', 'imp.done': 'اتضاف {n} عميل وتوزّعوا على {m} من الفريق. كل واحد ليه رقم # في قايمته.',
+    'imp.needPeople': 'اختار عضو واحد على الأقل.', 'imp.badFile': 'مقدرتش أقرا الملف ده.', 'imp.tooMany': 'اتقرا أول {n} صف بس.',
 
     'pal.jump': 'روح لـ', 'pal.create': 'اعمل', 'pal.results': 'النتايج', 'pal.hint.move': 'تنقّل', 'pal.hint.open': 'افتح', 'pal.hint.close': 'اقفل',
   },

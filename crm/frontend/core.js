@@ -227,6 +227,19 @@ const Store = {
     emitChange();
     return existing || clean;
   },
+  /** Many new records at once (imports): one persist and one outbox write instead of one per record. */
+  saveMany(col, recs) {
+    const now = new Date().toISOString();
+    const clean = recs.map((rec) => {
+      const r = { ...rec, id: rec.id || uid(PREFIX[col]), createdAt: now, createdBy: me().id, updatedAt: now, updatedBy: me().id };
+      return JSON.parse(JSON.stringify(r));
+    });
+    DB[col].unshift(...clean);
+    this.persist();
+    if (isCloud()) Sync.pushMany(clean.map((record) => ({ op: 'upsert', collection: col, record })));
+    emitChange();
+    return clean;
+  },
   remove(col, id) {
     const i = DB[col].findIndex((r) => r.id === id);
     if (i < 0) return null;
@@ -291,6 +304,12 @@ const Sync = {
     // Collapse repeated upserts of the same record into the latest one.
     if (op.op === 'upsert') this.outbox = this.outbox.filter((o) => !(o.op === 'upsert' && o.collection === op.collection && o.record.id === op.record.id));
     this.outbox.push(op);
+    this.saveOutbox();
+    clearTimeout(this._ft);
+    this._ft = setTimeout(() => this.flush(), 350);
+  },
+  pushMany(ops) {
+    this.outbox.push(...ops);
     this.saveOutbox();
     clearTimeout(this._ft);
     this._ft = setTimeout(() => this.flush(), 350);
