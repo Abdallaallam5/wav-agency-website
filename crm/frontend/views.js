@@ -380,12 +380,12 @@ function sortRows(rows, st, getters = {}) {
 }
 function leadsTable(leads, st) {
   if (!leads.length) return `<div class="card">${emptyHTML()}</div>`;
-  const rows = sortRows(leads, st, { stage: (l) => ENUM.stage.indexOf(l.stage), owner: (l) => userById(l.owner)?.name || '', queue: (l) => Number(l.queue) || 99999 });
+  const rows = sortRows(leads, st, { stage: (l) => ENUM.stage.indexOf(l.stage), owner: (l) => userById(l.owner)?.name || '', queue: (l) => (Number(l.queue) ? (DB.users.findIndex((u) => u.id === l.owner) + 1) * 1e6 + Number(l.queue) : 1e12) });
   return `<div class="table-wrap table-cards"><table class="table"><thead><tr>
     ${sortable('leads', 'queue', '#', st)}${sortable('leads', 'name', t('f.name'), st)}${sortable('leads', 'stage', t('f.stage'), st)}${sortable('leads', 'value', t('f.value'), st)}
     ${sortable('leads', 'source', t('f.source'), st)}<th>${t('f.service')}</th>${sortable('leads', 'owner', t('f.owner'), st)}${sortable('leads', 'followUp', t('f.followUp'), st)}${sortable('leads', 'createdAt', t('f.created'), st)}
   </tr></thead><tbody>${rows.map((l) => `<tr data-act="open" data-kind="lead" data-id="${l.id}">
-    <td data-label="#" class="num">${l.queue || ''}</td><td><div class="who"><div><b>${esc(l.name)}</b><small>${esc(l.company || '')}</small></div></div></td>
+    <td data-label="#" class="num">${l.queue ? `<span style="display:inline-flex;align-items:center;gap:6px">${avatar(userById(l.owner), 'avatar--sm')}<b>${l.queue}</b></span>` : ''}</td><td><div class="who"><div><b>${esc(l.name)}</b><small>${esc(l.company || '')}</small></div></div></td>
     <td data-label="${t('f.stage')}">${pill('stage', l.stage)}</td><td data-label="${t('f.value')}" class="num">${money(l.value)}</td>
     <td data-label="${t('f.source')}">${esc(label('source', l.source))}</td><td data-label="${t('f.service')}">${esc(label('service', l.service))}</td>
     <td data-label="${t('f.owner')}">${esc(userById(l.owner)?.name || '—')}</td><td data-label="${t('f.followUp')}">${OPEN_STAGES.includes(l.stage) ? dueTag(l.followUp) : '—'}</td>
